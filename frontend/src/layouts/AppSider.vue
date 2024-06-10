@@ -17,7 +17,7 @@
           @click="menuHandle"
       >
         <a-menu-item v-for="(menuInfo, index) in menu" :key="index">
-          <icon-font :type="menuInfo.icon" />
+          <svg-icon-font :icon="menuInfo.icon" :color="'#0035ff'"/>
           {{ menuInfo.title }}
         </a-menu-item>
       </a-menu>
@@ -32,16 +32,23 @@
 <script setup>
 import {ref,onMounted,reactive} from 'vue'
 import {useRouter} from "vue-router";
+import SvgIconFont from "@/components/global/SvgIconFont.vue";
 
 const collapsed = ref(true)
 const current = ref('menu_1')
 const menu = reactive({
   'menu_1' : {
-    icon: 'icon-fengche',
+    icon: 'svg-icon:stop',
     title: '称重',
     pageName: 'Scales',
     params: {
-      // test: 'hello'
+    },
+  },
+  'menu_2' : {
+    icon: 'ep:aim',
+    title: '设置',
+    pageName: 'setting',
+    params: {
     },
   },
 })

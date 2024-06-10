@@ -50,7 +50,8 @@ watch(()=>{props.id},(newValue,oldValue)=>{
 })
 
 onBeforeMount(()=>{
-  document.getElementById('loadingPage').remove()
+  const loadingEl = document.getElementById('loadingPage');
+  loadingEl && loadingEl.remove()
 })
 
 onMounted(()=>{

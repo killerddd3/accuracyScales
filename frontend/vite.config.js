@@ -3,6 +3,8 @@ import { defineConfig } from 'vite'
 import viteCompression from 'vite-plugin-compression'
 import Components from 'unplugin-vue-components/vite';
 import {AntDesignVueResolver} from "unplugin-vue-components/resolvers";
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
+import PurgeIcons from 'vite-plugin-purge-icons'
 import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -10,6 +12,13 @@ export default defineConfig(({ command, mode }) => {
     // 项目插件
     plugins: [
       vue(),
+      createSvgIconsPlugin({
+        // 本地 svg 存放路径
+        iconDirs: [path.resolve('src/assets/svg')],
+        symbolId: 'icon-[name]',
+        svgoOptions: true
+      }),
+      PurgeIcons(),
       Components({
         resolvers: [
           AntDesignVueResolver({
