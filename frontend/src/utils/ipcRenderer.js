@@ -1,9 +1,11 @@
+import { message } from 'ant-design-vue';
+
 const Renderer = (window.require && window.require('electron')) || window.electron || {};
 
 /**
  * ipc
  * 官方api说明：https://www.electronjs.org/zh/docs/latest/api/ipc-renderer
- * 
+ *
  * 属性/方法
  * ipc.invoke(channel, param) - 发送异步消息（invoke/handle 模型）
  * ipc.sendSync(channel, param) - 发送同步消息（send/on 模型）
@@ -22,6 +24,18 @@ const Renderer = (window.require && window.require('electron')) || window.electr
  */
 const ipc = Renderer.ipcRenderer || undefined;
 
+ipc.request =  (channel,args)=>{
+  return new Promise((resolve, reject) => {
+    ipc.invoke(channel,args).then(res=>{
+      if(res.code === 200){
+        resolve(res.data)
+      }else{
+        message.error(res.message)
+      }
+    })
+  })
+
+}
 /**
  * 是否为EE环境
  */

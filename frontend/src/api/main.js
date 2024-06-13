@@ -8,7 +8,13 @@ const ipcApiRoute = {
   connect: 'controller.serialport.connect',
   open: 'controller.serialport.open',
   receive: 'controller.serialport.receive',
+
+  login: 'controller.user.login',
+
+  requestError:'request.response.error'
+
 }
+
 
 export {
   ipcApiRoute

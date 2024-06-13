@@ -6,7 +6,7 @@
 const constantRouterMap = [
   {
     path: '/',
-    component: () => import('@/layouts/AppSider.vue'),
+    component: () => import('@/views/login/login.vue'),
     children: [
       {
         path: '/scales',
@@ -25,12 +25,10 @@ const constantRouterMap = [
     ]
   },
   {
-/*
 
         path: '/login',
-        name: 'SpecialLoginWindow',
-        component: () => import('@/views/effect/login/Window.vue')
-      */
+        name: 'Login',
+        component: () => import('@/views/login/login.vue')
   },
 ]
 

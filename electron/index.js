@@ -1,4 +1,5 @@
 const { Application } = require('ee-core');
+const Log = require('ee-core/log');
 
 class Index extends Application {
 
@@ -39,7 +40,7 @@ class Index extends Application {
 
   /**
    * before app close
-   */  
+   */
   async beforeClose () {
     // do some things
 

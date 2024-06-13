@@ -10,4 +10,12 @@ export default {
 			params: {}
 		}
 	},
+	Setting:{
+		'menu_100':{
+			icon: 'profile',
+			title: '登录',
+			pageName: 'Login',
+			params: {}
+		}
+	},
 }

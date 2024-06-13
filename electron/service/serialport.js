@@ -2,9 +2,9 @@
 
 const { Service } = require('ee-core');
 const {SerialPort} =  require('serialport');
-const CoreElectronWindow = require('ee-core/electron/window');
+const {getMainWindow} = require('ee-core/electron/window');
 const Log = require('ee-core/log');
-
+const {ipcApiRoute} =  require('../api/main')
 
 
 /**
@@ -36,9 +36,8 @@ class SerialPortService extends Service {
 
   async open(event) {
     this.port.open()
-    const channel = 'controller.serialport.receive';
     this.port.on('data',(data)=>{
-      CoreElectronWindow.getMainWindow().webContents.send(channel,data)
+      getMainWindow().webContents.send(ipcApiRoute.receive,data)
       // event.sender.send(channel,data)
     })
   }

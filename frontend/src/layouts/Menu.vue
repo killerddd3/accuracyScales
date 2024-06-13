@@ -49,10 +49,6 @@ watch(()=>{props.id},(newValue,oldValue)=>{
   menuHandle();
 })
 
-onBeforeMount(()=>{
-  const loadingEl = document.getElementById('loadingPage');
-  loadingEl && loadingEl.remove()
-})
 
 onMounted(()=>{
   menuHandle();

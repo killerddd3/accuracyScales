@@ -16,7 +16,7 @@ module.exports = (appInfo) => {
   /**
    * 应用程序顶部菜单
    */
-  config.openAppMenu = false;
+  config.openAppMenu = true;
 
   /**
    * jobs
@@ -25,6 +25,9 @@ module.exports = (appInfo) => {
     messageLog: true
   };
 
+  config.api = {
+    baseUrl:"http://121.89.171.228:8081/hangtian-service"
+  }
   return {
     ...config
   };

@@ -17,7 +17,7 @@
           @click="menuHandle"
       >
         <a-menu-item v-for="(menuInfo, index) in menu" :key="index">
-          <svg-icon-font :icon="menuInfo.icon" :color="'#0035ff'"/>
+          <svg-icon-font :icon="menuInfo.icon"/>
           {{ menuInfo.title }}
         </a-menu-item>
       </a-menu>
@@ -47,7 +47,7 @@ const menu = reactive({
   'menu_2' : {
     icon: 'ep:aim',
     title: '设置',
-    pageName: 'setting',
+    pageName: 'Setting',
     params: {
     },
   },

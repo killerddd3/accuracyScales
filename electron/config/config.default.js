@@ -24,7 +24,7 @@ module.exports = (appInfo) => {
    */
   config.windowsOption = {
     title: '称重',
-    width: 1180,
+    width: 1320,
     height: 850,
     minWidth: 400,
     minHeight: 300,

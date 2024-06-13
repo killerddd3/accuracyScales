@@ -1,13 +1,41 @@
 <script setup>
-import {ref} from "vue";
+import {onBeforeMount, onMounted, ref} from "vue";
 import {RouterView} from 'vue-router'
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
+import {ipc} from "@/utils/ipcRenderer";
+import {ipcApiRoute} from "@/api/main";
+import { message } from 'ant-design-vue';
 
 dayjs.locale('zh-cn');
 
 const locale = ref(zhCN)
+
+onBeforeMount(()=>{
+  const loadingEl = document.getElementById('loadingPage');
+  loadingEl && loadingEl.remove()
+})
+
+
+onMounted(() => {
+  init()
+})
+
+const error = (msg) => {
+  message.error(msg);
+};
+const handleRequestError = () => {
+  ipc.removeAllListeners(ipcApiRoute.requestError);
+  ipc.on(ipcApiRoute.requestError, (event, message) => {
+    error(message)
+  })
+}
+
+const init = () => {
+  handleRequestError()
+}
+
 </script>
 
 <template>
