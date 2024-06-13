@@ -26,8 +26,13 @@ class UserController extends Controller {
   async login (data) {
     return await Services.get('user').login(data);
   }
+  async isLogin () {
+    return await Services.get('user').isLogin();
+  }
 
-
+  async logout () {
+    return await Services.get('user').logout();
+  }
 }
 
 module.exports = UserController;

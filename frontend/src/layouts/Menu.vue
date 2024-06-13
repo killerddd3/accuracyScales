@@ -9,8 +9,8 @@
         theme="light"
         mode="inline"
         :selectedKeys="[current]"
-        @click="changeMenu">
-        <a-menu-item v-for="(menuInfo, subIndex) in menu" :key="subIndex">
+        @click="menuHandle">
+        <a-menu-item v-for="(menuInfo, subIndex) in currentMenu" :key="subIndex">
           <router-link :to="{ name: menuInfo.pageName, params: menuInfo.params}">
             <span>{{ menuInfo.title }}</span>
           </router-link>
@@ -25,32 +25,52 @@
   </a-layout>
 </template>
 <script setup>
-import { ref,onBeforeMount,watch,onMounted,defineProps } from 'vue';
+import { ref,watch,onMounted,defineProps,nextTick } from 'vue';
 import {useRouter} from "vue-router";
-import subMenu from '@/router/subMenu';
-
-const menu = ref({})
-const current=ref('menu_100')
-const  keys = ref([])
 const props = defineProps(['id'])
+const subMenu = ref({
+  Scales:[
+    {
+      title: '采样',
+      pageName: 'ScalesIndex',
+      params: {}
+    }
+  ],
+  Setting:[
+    {
+      title: '登录信息',
+      pageName: 'LoginInfo',
+      params: {}
+    }
+  ]
+})
+const currentMenu = ref([])
+const current=ref(0)
+
 
 const router = useRouter()
-const menuHandle = ()=> {
-  menu.value = subMenu[props.id];
-  const linkInfo = menu.value[current.value];
+const menuHandle = (e)=> {
+  if(!!e){
+    current.value = e.key
+  }
+  const linkInfo = currentMenu.value[current.value];
   router.push({ name: linkInfo.pageName, params: linkInfo.params});
 }
-const changeMenu = (e)=> {
-  current.value = e.key;
+
+
+const changeParentMenu = ()=>{
+  current.value = 0;
+  currentMenu.value = subMenu.value[props.id];
 }
 
-watch(()=>{props.id},(newValue,oldValue)=>{
-  current.value = 'menu_100';
+watch(()=>props.id,(newValue,oldValue)=>{
+  changeParentMenu()
   menuHandle();
-})
+},{ immediate:true })
 
 
 onMounted(()=>{
+  changeParentMenu()
   menuHandle();
 })
 </script>

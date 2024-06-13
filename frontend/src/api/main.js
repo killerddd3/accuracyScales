@@ -10,6 +10,8 @@ const ipcApiRoute = {
   receive: 'controller.serialport.receive',
 
   login: 'controller.user.login',
+  isLogin: 'controller.user.isLogin',
+  logout: 'controller.user.logout',
 
   requestError:'request.response.error'
 

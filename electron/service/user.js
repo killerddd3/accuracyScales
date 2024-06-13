@@ -31,6 +31,15 @@ class UserService extends Service {
     return res
   }
 
+  async isLogin(){
+    const token = store.get(constant.TOKEN)
+    Log.info("token:"+token)
+    return !!token
+  }
+
+  async logout(){
+    store.clear()
+  }
 
 }
 

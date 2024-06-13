@@ -35,31 +35,31 @@ import {useRouter} from "vue-router";
 import SvgIconFont from "@/components/global/SvgIconFont.vue";
 
 const collapsed = ref(true)
-const current = ref('menu_1')
-const menu = reactive({
-  'menu_1' : {
-    icon: 'svg-icon:stop',
+const current = ref(0)
+const menu = ref([
+  {
+    icon: 'ep:aim',
     title: '称重',
     pageName: 'Scales',
     params: {
     },
   },
-  'menu_2' : {
+  {
     icon: 'ep:aim',
     title: '设置',
     pageName: 'Setting',
     params: {
     },
-  },
-})
+  }
+])
 
 const router = useRouter()
 const  menuHandle = (e)=> {
   if(!!e){
     current.value = e.key
   }
-  const linkInfo = menu[current.value]
-  router.push({ name: linkInfo.pageName, params: linkInfo.params})
+  const linkInfo = menu.value[current.value]
+  router.push({ path: `/subMenu/${linkInfo.pageName}`, params: linkInfo.params})
 }
 
 onMounted(()=>{
