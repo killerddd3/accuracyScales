@@ -5,9 +5,8 @@ const {SerialPort} =  require('serialport');
 const CoreWindow = require('ee-core/electron/window');
 const Log = require('ee-core/log');
 const {ipcApiRoute} =  require('../api/main')
-const {ServiceError} = require("../utils/exception");
 const { ByteLengthParser } = require('@serialport/parser-byte-length')
-
+const result = require('../utils/result')
 /**
  * 示例服务（service层为单例）
  * @class
@@ -19,7 +18,8 @@ class SerialPortService extends Service {
   }
 
   async getSerialPortList() {
-    return SerialPort.list();
+    const list  = await SerialPort.list()
+    return result.ok(list);
   }
 
   async connect(args,event) {
@@ -27,6 +27,7 @@ class SerialPortService extends Service {
     const {path,baudRate} = args
     //dataBits 数据位 stopBits 停止位
     this.port = new SerialPort({path,baudRate,autoOpen:false,endOnClose:true,parity:'even'})
+    return result.ok()
   }
 
   async close(){
@@ -34,12 +35,13 @@ class SerialPortService extends Service {
       this.port.close()
     }
     this.port = null
+    return result.ok()
   }
 
 
   async open(event) {
-    if(!this.port) throw new ServiceError("请先连接")
-    if(this.port.isOpen) throw new ServiceError("已经连接")
+    if(!this.port) return result.fail("请先连接")
+    if(this.port.isOpen) return result.fail("已经连接")
     this.port.open()
     this.port.resume()
 
@@ -56,6 +58,7 @@ class SerialPortService extends Service {
     this.port.on('close',err=>{
       event.sender.send(ipcApiRoute.close,err)
     })
+    return result.ok()
   }
 
 }

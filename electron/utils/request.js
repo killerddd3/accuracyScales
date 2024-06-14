@@ -93,7 +93,7 @@ const request =  (options)=>{
         code:500,
         message:error.message||'系统错误'
       }
-      resolve(response)
+      reject(response)
     })
   })
 

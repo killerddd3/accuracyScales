@@ -12,7 +12,7 @@ const Router = createRouter({
 const whiteList = ['/login'];
 
 Router.beforeEach((to, from, next) => {
-  ipc.invoke(ipcApiRoute.isLogin).then(res=>{
+  ipc.request(ipcApiRoute.isLogin).then(res=>{
     if (res) {
       /* has token*/
       if (to.path === '/login') {

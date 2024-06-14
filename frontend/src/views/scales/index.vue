@@ -317,20 +317,20 @@ onMounted(() => {
   init()
 })
 const getSerialPortList = () => {
-  ipc.invoke(ipcApiRoute.getSerialPortList, {}).then(data => {
+  ipc.request(ipcApiRoute.getSerialPortList, {}).then(data => {
     serialPortList.value = data
   })
 }
 
 const connect = () => {
-  ipc.invoke(ipcApiRoute.connect, {path: deviceQueryParams.value.serialPort, baudRate: 9600}).then(data => {
+  ipc.request(ipcApiRoute.connect, {path: deviceQueryParams.value.serialPort, baudRate: 9600}).then(data => {
     isConnect.value = true
     message.success('连接成功');
   })
 }
 
 const close = () => {
-  ipc.invoke(ipcApiRoute.close).then(data => {
+  ipc.request(ipcApiRoute.close).then(data => {
     isConnect.value = false
     message.success('断开成功');
   })
@@ -339,7 +339,7 @@ const close = () => {
 
 
 const open = () => {
-  ipc.invoke(ipcApiRoute.open)
+  ipc.request(ipcApiRoute.open)
 }
 
 

@@ -2,9 +2,13 @@
 
 import {ipc} from "@/utils/ipcRenderer";
 import {ipcApiRoute} from "@/api/main";
-
+import {useRouter} from "vue-router";
+const router = useRouter();
 const logout = ()=>{
-  ipc.invoke(ipcApiRoute.logout)
+  ipc.request(ipcApiRoute.logout).then(res=> {
+        router.push("/login")
+      }
+  )
 }
 </script>
 
