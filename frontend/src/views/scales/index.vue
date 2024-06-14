@@ -50,7 +50,13 @@
 
 
       <a-form-item>
-        <a-button type="primary" html-type="submit" @click="connect">连接</a-button>
+        <a-space>
+          <a-button type="primary" html-type="submit" v-if="!isConnect" @click="connect">连接</a-button>
+          <a-button type="primary" html-type="submit" v-if="isConnect" @click="close">断开</a-button>
+          <a-button type="primary" html-type="submit" @click="getSerialPortList">刷新</a-button>
+          <a-button type="primary" html-type="submit" @click="open">开始采集</a-button>
+          <a-input v-model:value="weight"></a-input>
+        </a-space>
       </a-form-item>
     </a-form>
 
@@ -264,11 +270,11 @@
                 <div class="editable-cell">
                   <div v-if="editableData[record.key]" class="editable-cell-input-wrapper">
                     <a-input v-model:value="editableData[record.key].name" @pressEnter="save(record.key)" />
-                    <check-outlined class="editable-cell-icon-check" @click="save(record.key)" />
+                    <a-button class="editable-cell-icon-check" @click="save(record.key)" />
                   </div>
                   <div v-else class="editable-cell-text-wrapper">
                     {{ text || '--' }}
-                    <edit-outlined class="editable-cell-icon" @click="edit(record.key)" />
+                    <a-button @click="edit(record.key)" />
                   </div>
                 </div>
               </template>
@@ -304,7 +310,8 @@ const deviceQueryParams = ref({
 const deviceList = ref([])
 const deviceCodeList = ref([])
 const serialPortList = ref([])
-
+const isConnect= ref(false)
+const weight = ref(0)
 onMounted(() => {
   getSerialPortList()
   init()
@@ -316,25 +323,53 @@ const getSerialPortList = () => {
 }
 
 const connect = () => {
-  ipc.invoke(ipcApiRoute.connect, {path: queryParams.value.serialPort, baudRate: 9600}).then(data => {
+  ipc.invoke(ipcApiRoute.connect, {path: deviceQueryParams.value.serialPort, baudRate: 9600}).then(data => {
+    isConnect.value = true
     message.success('连接成功');
   })
 }
+
+const close = () => {
+  ipc.invoke(ipcApiRoute.close).then(data => {
+    isConnect.value = false
+    message.success('断开成功');
+  })
+}
+
+
 
 const open = () => {
   ipc.invoke(ipcApiRoute.open)
 }
 
-const receive = () => {
+
+
+const receiveListen = () => {
   ipc.removeAllListeners(ipcApiRoute.receive);
   ipc.on(ipcApiRoute.receive, (event, result) => {
+    weight.value = result
+
+  })
+}
+const errorListen = () => {
+  ipc.removeAllListeners(ipcApiRoute.error);
+  ipc.on(ipcApiRoute.error, (event, result) => {
+    console.log(result)
+
+  })
+}
+const closeListen = () => {
+  ipc.removeAllListeners(ipcApiRoute.close);
+  ipc.on(ipcApiRoute.close, (event, result) => {
     console.log(result)
 
   })
 }
 
 const init = () => {
-  receive()
+  receiveListen()
+  errorListen()
+  closeListen()
 }
 
 

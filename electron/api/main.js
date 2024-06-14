@@ -6,6 +6,8 @@
 const ipcApiRoute = {
 
   receive: 'controller.serialport.receive',
+  error: 'controller.serialport.error',
+  close: 'controller.serialport.close',
   requestError:'request.response.error'
 
 }

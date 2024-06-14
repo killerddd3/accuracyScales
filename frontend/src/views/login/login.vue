@@ -8,13 +8,13 @@ import md5 from 'MD5'
 import {useRouter} from "vue-router";
 
 const formState = ref({
-  username: null,
-  password: null
+  username: '99102',
+  password: 'xdmy@1234'
 })
 const router = useRouter();
 const login = ()=>{
   ipc.request(ipcApiRoute.login,{loginName:formState.value.username,loginPass:md5(formState.value.password)}).then(res=>{
-    router.push("/scales")
+    router.push("/")
   })
 }
 </script>

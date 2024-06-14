@@ -35,6 +35,9 @@ class SerialPortController extends Controller {
     return await Services.get('serialport').open(event);
   }
 
+  async close () {
+    return await Services.get('serialport').close();
+  }
 }
 
 module.exports = SerialPortController;
