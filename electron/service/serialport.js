@@ -26,7 +26,7 @@ class SerialPortService extends Service {
     await this.close()
     const {path,baudRate} = args
     //dataBits 数据位 stopBits 停止位
-    this.port = new SerialPort({path,baudRate,autoOpen:false,endOnClose:true,parity:'even'})
+    this.port = new SerialPort({path,baudRate,autoOpen:false,endOnClose:true,parity:'even',dataBits:8,})
     return result.ok()
   }
 

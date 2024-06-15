@@ -12,6 +12,13 @@ const ipcApiRoute = {
   close: 'controller.serialport.close',
 
 
+  getAssayProject: 'controller.project.getAssayProject',
+  getAssayWay: 'controller.project.getAssayWay',
+  getSample: 'controller.project.getSample',
+  getDevice: 'controller.project.getDevice',
+  commitSample: 'controller.project.commitSample',
+
+
   login: 'controller.user.login',
   isLogin: 'controller.user.isLogin',
   logout: 'controller.user.logout',

@@ -24,6 +24,7 @@ module.exports = (appInfo) => {
   };
 
   config.api = {
+    appHome:appInfo.home,
     baseUrl:"http://121.89.171.228:8081/hangtian-service"
   }
   return {

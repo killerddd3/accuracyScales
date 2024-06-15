@@ -40,6 +40,14 @@ class UserService extends Service {
     return result.ok()
   }
 
+  async getUserInfo(){
+    const res = await request({
+      url: '/mdmEmployee/findNam',
+      method: 'get',
+    })
+    return result.ok(res.data)
+  }
+
 }
 
 module.exports = UserService;

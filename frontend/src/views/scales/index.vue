@@ -314,8 +314,16 @@ const isConnect= ref(false)
 const weight = ref(0)
 onMounted(() => {
   getSerialPortList()
+  getDeviceList()
   init()
 })
+
+const getDeviceList = ()=>{
+  ipc.request(ipcApiRoute.getDevice, {}).then(data => {
+    deviceList.value = data
+  })
+}
+
 const getSerialPortList = () => {
   ipc.request(ipcApiRoute.getSerialPortList, {}).then(data => {
     serialPortList.value = data

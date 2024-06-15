@@ -51,7 +51,8 @@ module.exports = (appInfo) => {
     rotator: 'day',
     appLogName: 'ee.log',
     coreLogName: 'ee-core.log',
-    errorLogName: 'ee-error.log'
+    errorLogName: 'ee-error.log',
+    dir: path.join(appInfo.home, 'logs'), // 日志目录
   }
 
   /**
