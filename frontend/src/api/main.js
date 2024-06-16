@@ -22,6 +22,7 @@ const ipcApiRoute = {
   login: 'controller.user.login',
   isLogin: 'controller.user.isLogin',
   logout: 'controller.user.logout',
+  getUserInfo: 'controller.user.getUserInfo',
 
   requestError:'request.response.error'
 

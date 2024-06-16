@@ -55,8 +55,8 @@ class ProjectService extends Service {
     }
 
     async getDevice(){
-        Log.info(deviceDB.get('devices').value())
-        return result.ok()
+        const devices = deviceDB.get('devices').value()
+        return result.ok(devices)
     }
 
 }

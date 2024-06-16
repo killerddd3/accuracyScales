@@ -33,6 +33,10 @@ class UserController extends Controller {
   async logout () {
     return await Services.get('user').logout();
   }
+
+  async getUserInfo () {
+    return await Services.get('user').getUserInfo();
+  }
 }
 
 module.exports = UserController;

@@ -1,6 +1,7 @@
 <template>
   <div class="container">
     <a-form
+        ref="deviceFormRef"
         :model="deviceQueryParams"
         layout="inline"
         autocomplete="off"
@@ -11,12 +12,13 @@
           :rules="[{ required: true, message: '请选择仪器' }]"
       >
         <a-select
+            :disabled="isConnect"
             ref="select"
             style="width: 120px"
             placeholder="仪器选择"
             v-model:value="deviceQueryParams.device"
         >
-          <a-select-option value="jack">Jack</a-select-option>
+          <a-select-option v-for="item in deviceList" :value="item.deviceId">{{item.deviceName}}</a-select-option>
         </a-select>
       </a-form-item>
       <a-form-item
@@ -25,12 +27,13 @@
           :rules="[{ required: true, message: '请选择仪器条码' }]"
       >
         <a-select
+            :disabled="isConnect"
             ref="select"
             style="width: 120px"
             placeholder="仪器条码选择"
             v-model:value="deviceQueryParams.deviceCode"
         >
-          <a-select-option value="jack">Jack</a-select-option>
+          <a-select-option v-for="item in deviceList" :value="item.deviceId">{{item.deviceId}}</a-select-option>
         </a-select>
       </a-form-item>
       <a-form-item
@@ -39,6 +42,7 @@
           :rules="[{ required: true, message: '请选择串口号' }]"
       >
         <a-select
+            :disabled="isConnect"
             ref="select"
             style="width: 120px"
             placeholder="串口号选择"
@@ -53,16 +57,18 @@
         <a-space>
           <a-button type="primary" html-type="submit" v-if="!isConnect" @click="connect">连接</a-button>
           <a-button type="primary" html-type="submit" v-if="isConnect" @click="close">断开</a-button>
-          <a-button type="primary" html-type="submit" @click="getSerialPortList">刷新</a-button>
+          <a-popconfirm title="刷新串口将断开连接，是否继续" ok-text="是" cancel-text="否"  @confirm="flushSerial">
+            <a-button type="primary" html-type="submit">刷新</a-button>
+          </a-popconfirm>
           <a-button type="primary" html-type="submit" @click="open">开始采集</a-button>
           <a-input v-model:value="weight"></a-input>
         </a-space>
       </a-form-item>
     </a-form>
 
-    <!--    <a-button type="primary" @click="open">开始采集</a-button>-->
     <a-form
         :model="sampleQueryParams"
+        ref="sampleQueryFormRef"
         layout="inline"
         autocomplete="off"
     >
@@ -107,7 +113,6 @@
                   placeholder="选择样品名称"
                   v-model:value="sampleQueryParams.sampleName"
               >
-                <a-select-option value="jack">Jack</a-select-option>
               </a-select>
             </compact>
 
@@ -128,7 +133,6 @@
                   placeholder="选择工厂"
                   v-model:value="sampleQueryParams.factory"
               >
-                <a-select-option value="jack">Jack</a-select-option>
               </a-select>
             </compact>
           </a-form-item>
@@ -150,12 +154,12 @@
                   placeholder="选择设施设备及房间"
                   v-model:value="sampleQueryParams.installLocation"
               >
-                <a-select-option value="jack">Jack</a-select-option>
               </a-select>
             </compact>
           </a-form-item>
           <a-form-item
               name="entryStatus"
+              :rules="[{ required: true, message: '请选择录入状态' }]"
           >
             <compact>
               <template #addon>
@@ -167,7 +171,9 @@
                   placeholder="选择录入状态"
                   v-model:value="sampleQueryParams.entryStatus"
               >
-                <a-select-option value="jack">Jack</a-select-option>
+                <a-select-option :value="0">未录入</a-select-option>
+                <a-select-option :value="1">已录入</a-select-option>
+                <a-select-option :value="2">全部</a-select-option>
               </a-select>
             </compact>
           </a-form-item>
@@ -181,6 +187,7 @@
 
     <a-form
         :model="projectQueryParams"
+        ref="projectQueryRef"
         layout="inline"
         autocomplete="off"
     >
@@ -188,6 +195,7 @@
         <a-space style="width: 100%;" align="start">
           <a-form-item
               name="assayProject"
+              :rules="[{ required: true, message: '请选择检验项目' }]"
           >
             <compact>
               <template #addon>
@@ -198,8 +206,9 @@
                   style="width: 800px"
                   placeholder="选择检验项目"
                   v-model:value="projectQueryParams.assayProject"
+                  @change="projectChange"
               >
-                <a-select-option value="jack">Jack</a-select-option>
+                <a-select-option v-for="item in projectList" :value="item.inspectItem">{{item.inspectItemId}}</a-select-option>
               </a-select>
             </compact>
           </a-form-item>
@@ -207,6 +216,7 @@
         <a-space style="width: 100%;" align="start">
           <a-form-item
               name="assayWay"
+              :rules="[{ required: true, message: '请选择检验方法' }]"
           >
             <compact>
               <template #addon>
@@ -218,7 +228,7 @@
                   placeholder="选择检验方法"
                   v-model:value="projectQueryParams.assayWay"
               >
-                <a-select-option value="jack">Jack</a-select-option>
+                <a-select-option v-for="item in wayList" :value="item.inspectMethod">{{item.inspectMethodId}}</a-select-option>
               </a-select>
             </compact>
           </a-form-item>
@@ -228,6 +238,9 @@
         </a-space>
       </a-space>
     </a-form>
+
+    <a-modal v-model:open="chooseSampleOpen" title="接样">
+    </a-modal>
 
     <a-space style="width: 100%;" direction="vertical">
       <a-form
@@ -307,6 +320,9 @@ const deviceQueryParams = ref({
   deviceCode: null,
   serialPort: null,
 })
+const deviceFormRef = ref();
+const sampleQueryFormRef = ref();
+const projectQueryRef = ref();
 const deviceList = ref([])
 const deviceCodeList = ref([])
 const serialPortList = ref([])
@@ -315,15 +331,24 @@ const weight = ref(0)
 onMounted(() => {
   getSerialPortList()
   getDeviceList()
+  getUserInfo()
   init()
 })
 
+const getUserInfo = ()=>{
+  ipc.request(ipcApiRoute.getUserInfo,{}).then(data=>{
+  })
+}
 const getDeviceList = ()=>{
   ipc.request(ipcApiRoute.getDevice, {}).then(data => {
     deviceList.value = data
   })
 }
 
+const flushSerial = ()=>{
+  close()
+  getSerialPortList()
+}
 const getSerialPortList = () => {
   ipc.request(ipcApiRoute.getSerialPortList, {}).then(data => {
     serialPortList.value = data
@@ -331,10 +356,14 @@ const getSerialPortList = () => {
 }
 
 const connect = () => {
-  ipc.request(ipcApiRoute.connect, {path: deviceQueryParams.value.serialPort, baudRate: 9600}).then(data => {
-    isConnect.value = true
-    message.success('连接成功');
-  })
+  deviceFormRef.value
+      .validate()
+      .then(()=>{
+        ipc.request(ipcApiRoute.connect, {path: deviceQueryParams.value.serialPort}).then(data => {
+          isConnect.value = true
+          message.success('连接成功');
+        })
+      })
 }
 
 const close = () => {
@@ -355,6 +384,7 @@ const open = () => {
 const receiveListen = () => {
   ipc.removeAllListeners(ipcApiRoute.receive);
   ipc.on(ipcApiRoute.receive, (event, result) => {
+    console.log(result)
     weight.value = result
 
   })
@@ -362,15 +392,15 @@ const receiveListen = () => {
 const errorListen = () => {
   ipc.removeAllListeners(ipcApiRoute.error);
   ipc.on(ipcApiRoute.error, (event, result) => {
-    console.log(result)
-
+    isConnect.value = false
+    message.success('串口断开');
   })
 }
 const closeListen = () => {
   ipc.removeAllListeners(ipcApiRoute.close);
   ipc.on(ipcApiRoute.close, (event, result) => {
-    console.log(result)
-
+    isConnect.value = false
+    message.success('串口关闭');
   })
 }
 
@@ -383,17 +413,33 @@ const init = () => {
 
 const sampleQueryParams = ref({
   receiveSampleDate:null,
-  sampleBarcode:null,
+  sampleBarcode:"240612123620240480100001",
   lab:null,
   sampleType:null,
   sampleName:null,
   factory:null,
   samplePoint:null,
   installLocation:null,
-  entryStatus:null
+  entryStatus:0
 })
 
+const projectList = ref([])
+
 const getProject = ()=>{
+  sampleQueryFormRef.value.validate().then(()=>{
+    ipc.request(ipcApiRoute.getAssayProject,{barCode:sampleQueryParams.value.sampleBarcode,valType:sampleQueryParams.value.entryStatus}).then(data => {
+      projectList.value = data.inspectItemList
+    })
+  })
+}
+
+const wayList = ref([])
+const projectChange = (value)=>{
+  sampleQueryFormRef.value.validate().then(()=>{
+    ipc.request(ipcApiRoute.getAssayWay,{barCode:sampleQueryParams.value.sampleBarcode,valType:sampleQueryParams.value.entryStatus,inspectItem:projectQueryParams.value.assayProject}).then(data => {
+      wayList.value = data.inspectMethodList
+    })
+  })
 
 }
 
@@ -402,9 +448,23 @@ const projectQueryParams = ref({
   assayWay: null,
 })
 
+const chooseSampleOpen = ref(false)
 const chooseSample = ()=>{
-
+  projectQueryRef.value
+      .validate()
+      .then(()=>{
+        sampleQueryFormRef.value
+            .validate()
+            .then(()=>{
+          ipc.request(ipcApiRoute.getSample,{barCode:sampleQueryParams.value.sampleBarcode,valType:sampleQueryParams.value.entryStatus,inspectItem:projectQueryParams.value.assayProject,inspectMethod:projectQueryParams.value.assayWay}).then(data => {
+            console.log(data)
+            chooseSampleOpen.value = true
+          })
+        })
+      })
 }
+
+
 const examineQueryParams = ref({
   device: null,
   deviceCode: null,

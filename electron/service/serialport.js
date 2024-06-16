@@ -24,9 +24,9 @@ class SerialPortService extends Service {
 
   async connect(args,event) {
     await this.close()
-    const {path,baudRate} = args
+    const {path} = args
     //dataBits 数据位 stopBits 停止位
-    this.port = new SerialPort({path,baudRate,autoOpen:false,endOnClose:true,parity:'even',dataBits:8,})
+    this.port = new SerialPort({path,baudRate:9600,autoOpen:false,endOnClose:true,parity:'odd',dataBits:8,stopBits:1})
     return result.ok()
   }
 
@@ -45,8 +45,9 @@ class SerialPortService extends Service {
     this.port.open()
     this.port.resume()
 
-    const parser = this.port.pipe(new ByteLengthParser({ length: 8 }))
+    const parser = this.port.pipe(new ByteLengthParser({ length: 22 }))
     parser.on('data',(data)=>{
+      Log.info(data)
       const strData = Buffer.from(data).toString('utf-8')
       CoreWindow.getMainWindow().webContents.send(ipcApiRoute.receive,strData)
 

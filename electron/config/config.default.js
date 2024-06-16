@@ -52,7 +52,7 @@ module.exports = (appInfo) => {
     appLogName: 'ee.log',
     coreLogName: 'ee-core.log',
     errorLogName: 'ee-error.log',
-    dir: path.join(appInfo.home, 'logs'), // 日志目录
+    dir:path.join(appInfo.execDir, 'logs'),
   }
 
   /**
