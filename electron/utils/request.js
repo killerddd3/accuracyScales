@@ -3,11 +3,12 @@ const store = require('./storage')
 const Log = require('ee-core/log');
 const Conf = require('ee-core/config');
 const {broadcastError} = require("./exception");
-
+const qs = require('qs')
 /**
  * 参数处理
  * @param {*} params  参数
  */
+
 function tansParams(params) {
   let result = ''
   for (const propName of Object.keys(params)) {
@@ -31,7 +32,6 @@ function tansParams(params) {
 }
 
 
-axios.defaults.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
 // 创建axios实例
 const service = axios.create({
   // axios中请求配置有baseURL选项，表示请求URL公共部分
@@ -39,6 +39,7 @@ const service = axios.create({
   // 超时
   timeout: 10000
 })
+
 
 // request拦截器
 service.interceptors.request.use(config => {
@@ -48,21 +49,34 @@ service.interceptors.request.use(config => {
   if (!!token && !isToken) {
     config.headers['token'] = token // 让每个请求携带自定义token 请根据实际情况自行修改
   }
-  // get请求映射params参数
-  if (config.method === 'get' && config.params) {
-    let url = config.url + '?' + tansParams(config.params);
-    url = url.slice(0, -1);
-    config.params = {};
-    config.url = url;
+  if(!config.headers['Content-Type']){
+    config.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
   }
-  if (config.method === 'post' || config.method === 'put') {
-    const requestObj = {
-      url: config.url,
-      data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
-      time: new Date().getTime()
+
+  if(config.headers['Content-Type'] === 'application/x-www-form-urlencoded;charset=utf-8'){
+    // get请求映射params参数
+    if (config.method === 'get' && config.params) {
+      let url = config.url + '?' + qs.stringify(config.params,{ arrayFormat: 'repeat' });
+      url = url.slice(0, -1);
+      config.params = {};
+      config.url = url;
+    }
+    if (config.method === 'post' || config.method === 'put') {
+         config.data = typeof config.data === 'object' ? qs.stringify(config.data,{ arrayFormat: 'repeat', allowDots: true }) : config.data
+
+    }
+  }else if(config.headers['Content-Type'] === 'application/json;charset=utf-8'){
+    // get请求映射params参数
+    if (config.method === 'get' && config.params) {
+      let url = config.url + '?' + tansParams(config.params);
+      url = url.slice(0, -1);
+      config.params = {};
+      config.url = url;
+    }
+    if (config.method === 'post' || config.method === 'put') {
+      config.data =  typeof config.data === 'object' ? JSON.stringify(config.data) : config.data
     }
   }
-  Log.info(config)
   return config
 }, error => {
     Promise.reject(error)
@@ -70,6 +84,7 @@ service.interceptors.request.use(config => {
 
 // 响应拦截器
 service.interceptors.response.use(res => {
+    Log.info('response：',res)
     if(res.data && res.data.result){
       return Promise.resolve(res.data)
     }else{

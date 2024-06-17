@@ -48,6 +48,7 @@ class ProjectService extends Service {
     async commitSample(data){
         const res = await request({
             url: '/tscInspectTaskResult/receiveSample',
+            traditional: true,//必须指定为true
             method: 'post',
             data
         })

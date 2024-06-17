@@ -239,7 +239,40 @@
       </a-space>
     </a-form>
 
-    <a-modal v-model:open="chooseSampleOpen" title="接样">
+    <a-modal v-model:open="chooseSampleOpen" width="960px" title="接样" ok-text="提交" cancel-text="取消" :destroyOnClose="true" :after-close="closeChooseSample" @ok="commitSample">
+      <a-space direction="vertical">
+        <a-form
+            ref="chooseSampleRef"
+            :model="chooseSampleParams"
+            layout="inline"
+            autocomplete="off"
+        >
+          <a-form-item
+              label=""
+              name="barCode"
+              :rules="[{ required: true, message: '请输入样品条码' }]"
+          >
+            <a-input v-model:value="chooseSampleParams.barCode" addon-before="样品条码"/>
+          </a-form-item>
+          <a-form-item>
+            <a-button type="primary" html-type="submit" @click="getSample">接收样品</a-button>
+          </a-form-item>
+        </a-form>
+        <a-table bordered :pagination="false" :data-source="sampleList" :columns="sampleColumns">
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'action'">
+              <a-popconfirm
+                  v-if="sampleList.length>0"
+                  title="是否删除样品?"
+                  ok-text="是" cancel-text="否"
+                  @confirm="onDelete(record.sampleBarCode)"
+              >
+                <a-button type="primary">删除</a-button>
+              </a-popconfirm>
+            </template>
+          </template>
+        </a-table>
+      </a-space>
     </a-modal>
 
     <a-space style="width: 100%;" direction="vertical">
@@ -277,7 +310,7 @@
       </a-form>
       <a-tabs v-model:activeKey="activeTab" centered>
         <a-tab-pane key="1" tab="任务1">
-          <a-table bordered :data-source="taskList" :columns="taskColumns">
+          <a-table bordered :pagination="false" :data-source="taskList" :columns="taskColumns">
             <template #bodyCell="{ column, text, record }">
               <template v-if="column.dataIndex === 'name'">
                 <div class="editable-cell">
@@ -322,6 +355,7 @@ const deviceQueryParams = ref({
 })
 const deviceFormRef = ref();
 const sampleQueryFormRef = ref();
+const chooseSampleRef = ref();
 const projectQueryRef = ref();
 const deviceList = ref([])
 const deviceCodeList = ref([])
@@ -449,6 +483,9 @@ const projectQueryParams = ref({
 })
 
 const chooseSampleOpen = ref(false)
+const chooseSampleParams = ref({
+  barCode:"24061309472406130000100001",
+})
 const chooseSample = ()=>{
   projectQueryRef.value
       .validate()
@@ -456,14 +493,104 @@ const chooseSample = ()=>{
         sampleQueryFormRef.value
             .validate()
             .then(()=>{
-          ipc.request(ipcApiRoute.getSample,{barCode:sampleQueryParams.value.sampleBarcode,valType:sampleQueryParams.value.entryStatus,inspectItem:projectQueryParams.value.assayProject,inspectMethod:projectQueryParams.value.assayWay}).then(data => {
-            console.log(data)
             chooseSampleOpen.value = true
-          })
         })
       })
 }
 
+const closeChooseSample = ()=>{
+  sampleList.value = []
+  chooseSampleParams.value.barCode = null
+}
+const commitSample = ()=>{
+  if( sampleList.value.length === 0) return message.warn("请至少添加一个样品")
+  const receiveSamplePkId = sampleList.value.map(item=>{
+    return item.pkId;
+  })
+  const existCod = sampleList.value.map(item=>{
+    return item.sampleBarCode;
+  })
+  const inspectItem = sampleList.value.map(item=>{
+    return item.assayProject;
+  })
+  ipc.request(ipcApiRoute.commitSample,{
+    inspectMethodUsing: '1d3a3664a4d042e2adb885438facf57e',
+    barCodeJ: '240612123520240480100001',
+    receiveSamplePkId: ['12bd461d4777468f8e58e1ede85e8526','fc6e1ac1a73a4c049403288461c7b057'],
+    existCod: ['24061309472406130000100001', '240612123620240480100001'],
+    inspectItem: ['b1d3ecc23eee4bfb95fb68857cb36e6e', 'b1d3ecc23eee4bfb95fb68857cb36e6e']
+  }).then(data=>{
+    console.log(data)
+  })
+}
+const getSample = ()=>{
+  chooseSampleRef.value.validate().then(()=>{
+    ipc.request(ipcApiRoute.getSample,{
+      barCode:sampleQueryParams.value.sampleBarcode,
+      valType:sampleQueryParams.value.entryStatus,
+      inspectItem:projectQueryParams.value.assayProject,
+      inspectMethod:projectQueryParams.value.assayWay,
+      barCodeJ:chooseSampleParams.value.barCode
+    }).then(data => {
+      const result = {
+        sampleType:data.sample.sampleClassText,
+        sampleName:data.sample.sampleName,
+        sampleBarCode:data.sample.barCode,
+        sampleCode:data.sample.entrustOrder,
+        sampleBatchNum:data.sample.batchNum,
+        pkId:data.sample.pkId,
+        assayProject:data.sample.inspectItem
+      }
+      if(sampleList.value.some(item=>item.sampleBarCode === result.sampleBarCode)){
+        return message.warn("请勿重复添加")
+      }
+      sampleList.value.push(result)
+    })
+  })
+}
+const onDelete = (sampleBarCode)=>{
+  sampleList.value = sampleList.value.filter(item => item.sampleBarCode !== sampleBarCode);
+}
+const sampleList = ref([])
+const sampleColumns = ref([
+  {
+    title: '样品种类',
+    dataIndex: 'sampleType',
+    key: 'sampleType',
+    width: 120
+  },
+  {
+    title: '样品名称',
+    dataIndex: 'sampleName',
+    key: 'sampleName',
+    width: 240
+
+  },
+  {
+    title: '样品条码',
+    dataIndex: 'sampleBarCode',
+    key: 'sampleBarCode',
+    width: 240
+  },
+  {
+    title: '样品编码',
+    dataIndex: 'sampleCode',
+    key: 'sampleCode',
+    width: 160
+  },
+  {
+    title: '样品批次',
+    dataIndex: 'sampleBatchNum',
+    key: 'sampleBatchNum',
+    width: 120
+  },
+  {
+    title: '操作',
+    dataIndex: 'action',
+    key: 'action',
+    width: 80
+  }
+])
 
 const examineQueryParams = ref({
   device: null,
