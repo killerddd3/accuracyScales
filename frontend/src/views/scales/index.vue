@@ -313,17 +313,19 @@
           <a-table bordered :pagination="false" :data-source="[item]" :columns="taskColumns">
             <template #bodyCell="{ column, text, record,index }">
               <template v-if="needColums.includes(column.dataIndex)">
-                <div v-if="editableData[item.sampleBarCode] && editableData[item.sampleBarCode][index]">
-                  <a-flex justify="center" align="center" gap="middle">
-                    <span>{{editableData[item.sampleBarCode][index][column.dataIndex]}}</span>
-                    <svg-icon-font :icon="'svg-icon:stop'" :size="36" :color="'#f5222d'" @click="sendSmapleSave()"/>
-                  </a-flex>
-                </div>
-                <div v-else>
-                  <a-flex justify="center" align="center" gap="middle">
-                    <span>{{ text }}</span>
-                    <svg-icon-font :icon="'svg-icon:start'" :size="36" :color="'#07C160'" @click="sendSmapleEdit(item.sampleBarCode,index,column.dataIndex)"/>
-                  </a-flex>
+                <div class="collect-cell">
+                  <div v-if="editableData[item.sampleBarCode] && editableData[item.sampleBarCode][index]">
+                    <a-flex justify="center" align="center" gap="middle">
+                      <span>{{editableData[item.sampleBarCode][index][column.dataIndex]}}</span>
+                      <svg-icon-font :icon="'svg-icon:stop'" class="collect-btn" :size="36" :color="'#f5222d'" @click="sendSmapleSave()"/>
+                    </a-flex>
+                  </div>
+                  <div v-else>
+                    <a-flex justify="center" align="center" gap="middle">
+                      <span>{{ text }}</span>
+                      <svg-icon-font :icon="'svg-icon:start'" class="collect-btn" :size="36" :color="'#07C160'" @click="sendSmapleEdit(item.sampleBarCode,index,column.dataIndex)"/>
+                    </a-flex>
+                  </div>
                 </div>
               </template>
             </template>
@@ -411,7 +413,7 @@ const open = () => {
 }
 const stop = () => {
   ipc.request(ipcApiRoute.stop).then(data=>{
-    isCollect.value = false
+
   })
 }
 
@@ -434,12 +436,17 @@ const errorListen = () => {
   ipc.removeAllListeners(ipcApiRoute.error);
   ipc.on(ipcApiRoute.error, (event, result) => {
     isConnect.value = false
+    flushSerial()
+    if(isCollect.value){
+      sendSmapleSave()
+    }
     message.error('设备丢失');
   })
 }
 const closeListen = () => {
   ipc.removeAllListeners(ipcApiRoute.close);
   ipc.on(ipcApiRoute.close, (event, result) => {
+    console.log("关闭",isCollect.value)
     if(isCollect.value){
       sendSmapleSave()
     }
@@ -456,7 +463,7 @@ const init = () => {
 
 const sampleQueryParams = ref({
   receiveSampleDate:null,
-  sampleBarcode:"240612123620240480100001",
+  sampleBarcode:null,
   lab:null,
   sampleType:null,
   sampleName:null,
@@ -493,7 +500,7 @@ const projectQueryParams = ref({
 
 const chooseSampleOpen = ref(false)
 const chooseSampleParams = ref({
-  barCode:"24061309472406130000100001",
+  barCode:null,
 })
 const chooseSample = ()=>{
   projectQueryRef.value
@@ -656,6 +663,7 @@ const sendSmapleSave = ()  => {
   delete editableData.value[activeTab.value][activeTableRow.value];
   activeTableRow.value = null
   activeProp.value = null
+  isCollect.value = false
   stop()
 };
 
@@ -745,4 +753,15 @@ const sendSample = ()=>{
   padding: 10px;
 }
 
+.collect-cell{
+  .collect-btn{
+    visibility: hidden;
+  }
+}
+
+.collect-cell:hover{
+  .collect-btn{
+    visibility: visible;
+  }
+}
 </style>

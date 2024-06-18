@@ -69,7 +69,6 @@ service.interceptors.request.use(config => {
       config.data =  typeof config.data === 'object' ? JSON.stringify(config.data) : config.data
     }
   }
-  Log.info('request：',config)
   return config
 }, error => {
     Promise.reject(error)
