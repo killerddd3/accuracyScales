@@ -42,6 +42,9 @@ class ProjectController extends Controller {
   async getDevice () {
     return await Services.get('project').getDevice();
   }
+  async sendSample (data) {
+    return await Services.get('project').sendSample(data);
+  }
 }
 
 module.exports = ProjectController;

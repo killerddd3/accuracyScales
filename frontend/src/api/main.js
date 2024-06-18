@@ -7,6 +7,7 @@ const ipcApiRoute = {
   getSerialPortList: 'controller.serialport.getSerialPortList',
   connect: 'controller.serialport.connect',
   open: 'controller.serialport.open',
+  stop: 'controller.serialport.stop',
   receive: 'controller.serialport.receive',
   error: 'controller.serialport.error',
   close: 'controller.serialport.close',
@@ -17,6 +18,7 @@ const ipcApiRoute = {
   getSample: 'controller.project.getSample',
   getDevice: 'controller.project.getDevice',
   commitSample: 'controller.project.commitSample',
+  sendSample: 'controller.project.sendSample',
 
 
   login: 'controller.user.login',

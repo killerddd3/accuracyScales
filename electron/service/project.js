@@ -48,7 +48,6 @@ class ProjectService extends Service {
     async commitSample(data){
         const res = await request({
             url: '/tscInspectTaskResult/receiveSample',
-            traditional: true,//必须指定为true
             method: 'post',
             data
         })
@@ -58,6 +57,18 @@ class ProjectService extends Service {
     async getDevice(){
         const devices = deviceDB.get('devices').value()
         return result.ok(devices)
+    }
+
+    async sendSample(data){
+        const res = await request({
+            url: '/rveCheckNotice/balanceDataReception',
+            method: 'post',
+            headers:{
+                'Content-Type':'application/json;charset=utf-8'
+            },
+            data
+        })
+        return result.ok(res.data)
     }
 
 }

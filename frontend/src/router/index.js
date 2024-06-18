@@ -1,8 +1,9 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import {createRouter, createWebHashHistory, useRouter} from 'vue-router'
 import routerMap from './routerMap'
 
 import {ipc} from "@/utils/ipcRenderer";
 import {ipcApiRoute} from "@/api/main";
+import useUserStore from "@/store/modules/user";
 
 const Router = createRouter({
   history: createWebHashHistory(),
@@ -20,6 +21,8 @@ Router.beforeEach((to, from, next) => {
       } else if (whiteList.indexOf(to.path) !== -1) {
         next()
       } else {
+        const userStore = useUserStore()
+        userStore.getInfo()
         next()
       }
     } else {

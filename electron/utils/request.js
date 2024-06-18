@@ -53,30 +53,23 @@ service.interceptors.request.use(config => {
     config.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
   }
 
+  // get请求映射params参数
+  if (config.method === 'get' && config.params) {
+    let url = config.url + '?' + qs.stringify(config.params,{ arrayFormat: 'repeat' });
+    config.params = {};
+    config.url = url;
+  }
+
   if(config.headers['Content-Type'] === 'application/x-www-form-urlencoded;charset=utf-8'){
-    // get请求映射params参数
-    if (config.method === 'get' && config.params) {
-      let url = config.url + '?' + qs.stringify(config.params,{ arrayFormat: 'repeat' });
-      url = url.slice(0, -1);
-      config.params = {};
-      config.url = url;
-    }
     if (config.method === 'post' || config.method === 'put') {
          config.data = typeof config.data === 'object' ? qs.stringify(config.data,{ arrayFormat: 'repeat', allowDots: true }) : config.data
-
     }
   }else if(config.headers['Content-Type'] === 'application/json;charset=utf-8'){
-    // get请求映射params参数
-    if (config.method === 'get' && config.params) {
-      let url = config.url + '?' + tansParams(config.params);
-      url = url.slice(0, -1);
-      config.params = {};
-      config.url = url;
-    }
     if (config.method === 'post' || config.method === 'put') {
       config.data =  typeof config.data === 'object' ? JSON.stringify(config.data) : config.data
     }
   }
+  Log.info('request：',config)
   return config
 }, error => {
     Promise.reject(error)
@@ -84,7 +77,6 @@ service.interceptors.request.use(config => {
 
 // 响应拦截器
 service.interceptors.response.use(res => {
-    Log.info('response：',res)
     if(res.data && res.data.result){
       return Promise.resolve(res.data)
     }else{
@@ -108,6 +100,10 @@ const request =  (options)=>{
       const response = {
         code:500,
         message:error.message||'系统错误'
+      }
+      if(error.message === "未登录"){
+        response.code = 403
+        store.clear()
       }
       reject(response)
     })

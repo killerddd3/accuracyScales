@@ -26,8 +26,8 @@ module.exports = (appInfo) => {
   };
   config.api = {
     appHome:appInfo.execDir,
-    // baseUrl:"http://121.89.171.228:8081/hangtian-service"
-    baseUrl:"http://8y6656.natappfree.cc/hangtian-service"
+    baseUrl:"http://121.89.171.228:8081/hangtian-service"
+    // baseUrl:"http://8y6656.natappfree.cc/hangtian-service"
   }
   return {
     ...config

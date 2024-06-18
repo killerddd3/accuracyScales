@@ -1,4 +1,5 @@
 import { message } from 'ant-design-vue';
+import {useRouter} from "vue-router";
 
 const Renderer = (window.require && window.require('electron')) || window.electron || {};
 
@@ -31,6 +32,10 @@ ipc.request =  (channel,args)=>{
         resolve(res.data)
       }else{
         message.error(res.message)
+        if(res.code === 403){
+          const router = useRouter()
+          router.push("/login")
+        }
       }
     })
   })

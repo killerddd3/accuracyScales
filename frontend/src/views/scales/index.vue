@@ -60,8 +60,6 @@
           <a-popconfirm title="刷新串口将断开连接，是否继续" ok-text="是" cancel-text="否"  @confirm="flushSerial">
             <a-button type="primary" html-type="submit">刷新</a-button>
           </a-popconfirm>
-          <a-button type="primary" html-type="submit" @click="open">开始采集</a-button>
-          <a-input v-model:value="weight"></a-input>
         </a-space>
       </a-form-item>
     </a-form>
@@ -278,12 +276,14 @@
     <a-space style="width: 100%;" direction="vertical">
       <a-form
           :model="examineQueryParams"
+          ref="examineQueryRef"
           layout="inline"
           autocomplete="off"
       >
             <a-form-item
                 label="天平核查结果"
                 name="deviceActive"
+                :rules="[{ required: true, message: '请选择天平核查结果' }]"
             >
               <a-select
                   ref="select"
@@ -291,7 +291,7 @@
                   placeholder="选择天平核查结果"
                   v-model:value="examineQueryParams.deviceActive"
               >
-                <a-select-option value="jack">Jack</a-select-option>
+                <a-select-option v-for="item in deviceActiveList" :value="item.value">{{item.label}}</a-select-option>
               </a-select>
             </a-form-item>
             <a-form-item
@@ -304,39 +304,36 @@
                   placeholder="选择结果计算方式"
                   v-model:value="examineQueryParams.calcType"
               >
-                <a-select-option value="jack">Jack</a-select-option>
+                <a-select-option v-for="item in calcTypeList" :value="item.value">{{item.label}}</a-select-option>
               </a-select>
             </a-form-item>
       </a-form>
-      <a-tabs v-model:activeKey="activeTab" centered>
-        <a-tab-pane key="1" tab="任务1">
-          <a-table bordered :pagination="false" :data-source="taskList" :columns="taskColumns">
-            <template #bodyCell="{ column, text, record }">
-              <template v-if="column.dataIndex === 'name'">
-                <div class="editable-cell">
-                  <div v-if="editableData[record.key]" class="editable-cell-input-wrapper">
-                    <a-input v-model:value="editableData[record.key].name" @pressEnter="save(record.key)" />
-                    <a-button class="editable-cell-icon-check" @click="save(record.key)" />
-                  </div>
-                  <div v-else class="editable-cell-text-wrapper">
-                    {{ text || '--' }}
-                    <a-button @click="edit(record.key)" />
-                  </div>
+      <a-tabs v-model:activeKey="activeTab" centered @change="tabChange">
+        <a-tab-pane v-for="(item,index) in tabList" :key="item.sampleBarCode" :tab="`任务${index+1}`">
+          <a-table bordered :pagination="false" :data-source="[item]" :columns="taskColumns">
+            <template #bodyCell="{ column, text, record,index }">
+              <template v-if="needColums.includes(column.dataIndex)">
+                <div v-if="editableData[item.sampleBarCode] && editableData[item.sampleBarCode][index]">
+                  <a-flex justify="center" align="center" gap="middle">
+                    <span>{{editableData[item.sampleBarCode][index][column.dataIndex]}}</span>
+                    <svg-icon-font :icon="'svg-icon:stop'" :size="36" :color="'#f5222d'" @click="sendSmapleSave()"/>
+                  </a-flex>
                 </div>
-              </template>
-              <template v-else-if="column.dataIndex === 'operation'">
-                <a-popconfirm
-                    v-if="dataSource.length"
-                    title="Sure to delete?"
-                    @confirm="onDelete(record.key)"
-                >
-                  <a>Delete</a>
-                </a-popconfirm>
+                <div v-else>
+                  <a-flex justify="center" align="center" gap="middle">
+                    <span>{{ text }}</span>
+                    <svg-icon-font :icon="'svg-icon:start'" :size="36" :color="'#07C160'" @click="sendSmapleEdit(item.sampleBarCode,index,column.dataIndex)"/>
+                  </a-flex>
+                </div>
               </template>
             </template>
           </a-table>
         </a-tab-pane>
       </a-tabs>
+      <a-space>
+        <a-button type="primary" html-type="submit" @click="tempSave">暂存</a-button>
+        <a-button type="primary" html-type="submit" @click="sendSample">提交</a-button>
+      </a-space>
     </a-space>
   </div>
 </template>
@@ -347,7 +344,9 @@ import {ipc} from '@/utils/ipcRenderer';
 import {message} from 'ant-design-vue';
 import Compact from "@/components/global/compact.vue";
 import {cloneDeep} from "lodash";
-
+import SvgIconFont from "@/components/global/SvgIconFont.vue";
+import useUserStore from "@/store/modules/user";
+import numbro from "numbro";
 const deviceQueryParams = ref({
   device: null,
   deviceCode: null,
@@ -357,22 +356,18 @@ const deviceFormRef = ref();
 const sampleQueryFormRef = ref();
 const chooseSampleRef = ref();
 const projectQueryRef = ref();
+const examineQueryRef = ref();
 const deviceList = ref([])
 const deviceCodeList = ref([])
 const serialPortList = ref([])
 const isConnect= ref(false)
-const weight = ref(0)
+const isCollect= ref(false)
 onMounted(() => {
   getSerialPortList()
   getDeviceList()
-  getUserInfo()
   init()
 })
 
-const getUserInfo = ()=>{
-  ipc.request(ipcApiRoute.getUserInfo,{}).then(data=>{
-  })
-}
 const getDeviceList = ()=>{
   ipc.request(ipcApiRoute.getDevice, {}).then(data => {
     deviceList.value = data
@@ -410,16 +405,28 @@ const close = () => {
 
 
 const open = () => {
-  ipc.request(ipcApiRoute.open)
+  ipc.request(ipcApiRoute.open).then(data=>{
+    isCollect.value = true
+  })
+}
+const stop = () => {
+  ipc.request(ipcApiRoute.stop).then(data=>{
+    isCollect.value = false
+  })
 }
 
-
-
+//TODO 封装ipc.on
 const receiveListen = () => {
   ipc.removeAllListeners(ipcApiRoute.receive);
   ipc.on(ipcApiRoute.receive, (event, result) => {
-    console.log(result)
-    weight.value = result
+    if(result.code === 200){
+      if(isCollect.value){
+        const weight = numbro.unformat(result.data.replace('g',''))
+        editableData.value[activeTab.value][activeTableRow.value][activeProp.value] = weight
+      }
+    }else{
+      message.error(result.message)
+    }
 
   })
 }
@@ -427,14 +434,16 @@ const errorListen = () => {
   ipc.removeAllListeners(ipcApiRoute.error);
   ipc.on(ipcApiRoute.error, (event, result) => {
     isConnect.value = false
-    message.success('串口断开');
+    message.error('设备丢失');
   })
 }
 const closeListen = () => {
   ipc.removeAllListeners(ipcApiRoute.close);
   ipc.on(ipcApiRoute.close, (event, result) => {
-    isConnect.value = false
-    message.success('串口关闭');
+    if(isCollect.value){
+      sendSmapleSave()
+    }
+    message.error('串口关闭');
   })
 }
 
@@ -514,13 +523,41 @@ const commitSample = ()=>{
     return item.assayProject;
   })
   ipc.request(ipcApiRoute.commitSample,{
-    inspectMethodUsing: '1d3a3664a4d042e2adb885438facf57e',
-    barCodeJ: '240612123520240480100001',
-    receiveSamplePkId: ['12bd461d4777468f8e58e1ede85e8526','fc6e1ac1a73a4c049403288461c7b057'],
-    existCod: ['24061309472406130000100001', '240612123620240480100001'],
-    inspectItem: ['b1d3ecc23eee4bfb95fb68857cb36e6e', 'b1d3ecc23eee4bfb95fb68857cb36e6e']
+    inspectMethodUsing: projectQueryParams.value.assayWay,
+    barCodeJ: chooseSampleParams.value.barCode,
+    receiveSamplePkId: receiveSamplePkId,
+    existCod:existCod,
+    inspectItem: inspectItem
   }).then(data=>{
-    console.log(data)
+    const currentList = tabList.value.map(item=>item.sampleBarCode)
+    const addList = sampleList.value.map(item=>item.sampleBarCode)
+    const repeatList = addList.filter((x)=>{
+      return currentList.includes(x)
+    })
+
+    if(repeatList.length>0){
+      return message.warn(`样品条码:${repeatList.join(",")}重复`)
+    }
+    const copyList = sampleList.value
+    const valueList = data.editData.mdmOriginalRecordMethodList.filter(item=>{
+      return item.source === '天平'
+    })
+    valueList.forEach(item=>{
+      taskColumns.value.push({
+        title: item.nam,
+        dataIndex: item.abbreviation,
+        key: item.abbreviation,
+        width: 120
+      })
+      needColums.value.push(item.abbreviation)
+      copyList.forEach(inner=>{
+        inner[item.abbreviation] = 0
+      })
+    })
+    tabList.value = copyList
+    activeTab.value = copyList[0].sampleBarCode
+    tabChange(activeTab.value)
+    chooseSampleOpen.value = false
   })
 }
 const getSample = ()=>{
@@ -539,7 +576,8 @@ const getSample = ()=>{
         sampleCode:data.sample.entrustOrder,
         sampleBatchNum:data.sample.batchNum,
         pkId:data.sample.pkId,
-        assayProject:data.sample.inspectItem
+        assayProject:data.sample.inspectItem,
+        assayWay:projectQueryParams.value.assayWay
       }
       if(sampleList.value.some(item=>item.sampleBarCode === result.sampleBarCode)){
         return message.warn("请勿重复添加")
@@ -597,53 +635,114 @@ const examineQueryParams = ref({
   deviceCode: null,
   serialPort: null,
 })
-const activeTab = ref('1')
-const editableData = reactive({});
-const edit = key => {
-  editableData[key] = cloneDeep(taskList.value.filter(item => key === item.key)[0]);
+const activeTab = ref(null)
+const activeTableRow = ref(null)
+const activeProp = ref(null)
+const editableData = ref({});
+const tabChange = (value)=>{
+  editableData.value = {
+    [value]:{}
+  }
+}
+const sendSmapleEdit = (tabKey,tableIndex,dataIndex) => {
+  if(!isConnect.value) return message.warn("请先连接串口")
+  editableData.value[tabKey][tableIndex] = cloneDeep(tabList.value.filter(item => tabKey === item.sampleBarCode)[tableIndex]);
+  activeTableRow.value = tableIndex
+  activeProp.value = dataIndex
+  open()
 };
-const save = key => {
-  Object.assign(taskList.value.filter(item => key === item.key)[0], editableData[key]);
-  delete editableData[key];
+const sendSmapleSave = ()  => {
+  Object.assign(tabList.value.filter(item => activeTab.value === item.sampleBarCode)[activeTableRow.value], editableData.value[activeTab.value][activeTableRow.value]);
+  delete editableData.value[activeTab.value][activeTableRow.value];
+  activeTableRow.value = null
+  activeProp.value = null
+  stop()
 };
-const taskList = ref([
+
+const deviceActiveList = ref([
   {
-    key: '1',
-    name: '胡彦斌',
-    age: 32,
-    address: '西湖区湖底公园1号',
+    value:"ACTIVE",
+    label:"可用"
   },
+  {
+    value:"DISACTIVE",
+    label:"不可用"
+  }
 ])
+const calcTypeList = ref([
+  {
+    value:"MIN",
+    label:"最小值"
+  },
+  {
+    value:"MAX",
+    label:"最大值"
+  },
+  {
+    value:"AVG",
+    label:"平均值"
+  }
+])
+const tabList = ref([])
 const taskColumns = ref([
   {
+    title: '样品种类',
+    dataIndex: 'sampleType',
+    key: 'sampleType',
+    width: 120
+  },
+  {
     title: '样品名称',
-    dataIndex: 'name',
-    key: 'name',
+    dataIndex: 'sampleName',
+    key: 'sampleName',
+    width: 200
+
   },
   {
     title: '样品条码',
-    dataIndex: 'age',
-    key: 'age',
+    dataIndex: 'sampleBarCode',
+    key: 'sampleBarCode',
+    width: 240
   },
   {
     title: '样品批次',
-    dataIndex: 'address',
-    key: 'address',
-  },
-  {
-    title: '样品种类',
-    dataIndex: 'address',
-    key: 'address',
-  },
-  {
-    title: '样重',
-    dataIndex: 'address',
-    key: 'address',
+    dataIndex: 'sampleBatchNum',
+    key: 'sampleBatchNum',
+    width: 120
   },
 ])
+const needColums = ref([])
+
+const tempSave = ()=>{
+
+}
+const userStore = useUserStore()
+const sendSample = ()=>{
+
+  examineQueryRef.value
+      .validate()
+      .then(()=>{
+        if(isCollect.value) return message.warn("请先停止采集")
+        const resultList = tabList.value.map(item=>{
+          return {
+            InspectionItems:item.assayProject,
+            InspectionMethod:item.assayWay,
+            Inspector:userStore.pkId,
+            barCode:item.sampleBarCode,
+            value:item[needColums.value[0]],
+            standby1:'12'
+          }
+        })
+        ipc.request(ipcApiRoute.sendSample,{data:resultList}).then(data=>{
+          tabList.value = []
+          message.success("提交成功")
+        })
+      })
+}
 </script>
 <style scoped>
 .container {
   padding: 10px;
 }
+
 </style>
