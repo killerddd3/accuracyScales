@@ -232,7 +232,8 @@
           </a-form-item>
         </a-space>
         <a-space style="width: 100%;" align="start">
-          <a-button type="primary" @click="chooseSample">接样</a-button>
+          <a-button type="primary" @click="chooseSample">批量接样</a-button>
+          <a-button type="primary" @click="chooseOneSample">接样</a-button>
         </a-space>
       </a-space>
     </a-form>
@@ -273,7 +274,7 @@
       </a-space>
     </a-modal>
 
-    <a-space style="width: 100%;" direction="vertical">
+    <a-space style="width: 100%;margin-top: 10px" direction="vertical">
       <a-form
           :model="examineQueryParams"
           ref="examineQueryRef"
@@ -487,7 +488,10 @@ const wayList = ref([])
 const projectChange = (value)=>{
   sampleQueryFormRef.value.validate().then(()=>{
     ipc.request(ipcApiRoute.getAssayWay,{barCode:sampleQueryParams.value.sampleBarcode,valType:sampleQueryParams.value.entryStatus,inspectItem:projectQueryParams.value.assayProject}).then(data => {
-      wayList.value = data.inspectMethodList
+      if(data.inspectMethodList.length>0){
+        wayList.value = data.inspectMethodList
+        projectQueryParams.value.assayWay = data.inspectMethodList[0].inspectMethod
+      }
     })
   })
 
@@ -513,7 +517,65 @@ const chooseSample = ()=>{
         })
       })
 }
-
+const chooseOneSample = ()=>{
+  projectQueryRef.value
+      .validate()
+      .then(()=>{
+        sampleQueryFormRef.value
+            .validate()
+            .then(()=>{
+              ipc.request(ipcApiRoute.getSample,{
+                barCode:sampleQueryParams.value.sampleBarcode,
+                valType:sampleQueryParams.value.entryStatus,
+                inspectItem:projectQueryParams.value.assayProject,
+                inspectMethod:projectQueryParams.value.assayWay,
+                barCodeJ:sampleQueryParams.value.sampleBarcode
+              }).then(data => {
+                const result = {
+                  sampleType:data.sample.sampleClassText,
+                  sampleName:data.sample.sampleName,
+                  sampleBarCode:data.sample.barCode,
+                  sampleCode:data.sample.entrustOrder,
+                  sampleBatchNum:data.sample.batchNum,
+                  pkId:data.sample.pkId,
+                  assayProject:data.sample.inspectItem,
+                  assayWay:projectQueryParams.value.assayWay
+                }
+                ipc.request(ipcApiRoute.commitSample,{
+                  inspectMethodUsing: projectQueryParams.value.assayWay,
+                  barCodeJ: result.sampleBarCode,
+                  receiveSamplePkId: result.pkId,
+                  existCod:result.sampleBarCode,
+                  inspectItem: result.assayProject
+                }).then(innerData=>{
+                  const currentList = tabList.value.map(item=>item.sampleBarCode)
+                  if(currentList.includes(result.sampleBarCode)){
+                    return message.warn(`样品条码:${result.sampleBarCode}重复`)
+                  }
+                  const copyList = [result]
+                  const valueList = innerData.editData.mdmOriginalRecordMethodList.filter(item=>{
+                    return item.source === '天平'
+                  })
+                  valueList.forEach(item=>{
+                    taskColumns.value.push({
+                      title: item.nam,
+                      dataIndex: item.abbreviation,
+                      key: item.abbreviation,
+                      width: 120
+                    })
+                    needColums.value.push(item.abbreviation)
+                    copyList.forEach(inner=>{
+                      inner[item.abbreviation] = 0
+                    })
+                  })
+                  tabList.value = copyList
+                  activeTab.value = copyList[0].sampleBarCode
+                  tabChange(activeTab.value)
+                })
+              })
+            })
+      })
+}
 const closeChooseSample = ()=>{
   sampleList.value = []
   chooseSampleParams.value.barCode = null
@@ -638,9 +700,8 @@ const sampleColumns = ref([
 ])
 
 const examineQueryParams = ref({
-  device: null,
-  deviceCode: null,
-  serialPort: null,
+  deviceActive: 'ACTIVE',
+  calcType: null,
 })
 const activeTab = ref(null)
 const activeTableRow = ref(null)

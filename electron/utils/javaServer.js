@@ -5,6 +5,7 @@ const path = require('path');
 const Ps = require('ee-core/ps')
 const cross = require("ee-core/cross");
 const Log = require("ee-core/log");
+const {JAVA_SERVER_NAME} = require("./constant")
 const createJavaServer = async ()=> {
     // 服务名称，一般填写使用的语言
     const serviceName = "java";
@@ -12,7 +13,7 @@ const createJavaServer = async ()=> {
     const jarPath = path.join(Ps.getExtraResourcesDir(), 'java/app/weighing.jar');
     const opt = {
         // 程序名称
-        name: 'weighing',
+        name: JAVA_SERVER_NAME,
         // 可执行程序路径，或本机的可执行命令
         cmd: path.join(Ps.getExtraResourcesDir(), 'java/jre/jre1.8.0_401/bin/java.exe'),
         // 程序目录，如jar文件所在目录

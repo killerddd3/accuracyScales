@@ -3,10 +3,12 @@
 
 const { Service } = require('ee-core');
 const request = require("../utils/request");
+const crossRequest = require("../utils/crossRequest");
 const {deviceDB} = require("../utils/jsonDB");
 const Log = require("ee-core/log");
 const constant = require("../utils/constant")
 const result = require("../utils/result");
+const Cross = require("ee-core/cross");
 
 /**
  * 示例服务（service层为单例）
@@ -55,6 +57,9 @@ class ProjectService extends Service {
     }
 
     async getDevice(){
+        await crossRequest({
+
+        })
         const devices = deviceDB.get('devices').value()
         return result.ok(devices)
     }
