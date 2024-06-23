@@ -35,8 +35,6 @@ function tansParams(params) {
 
 // 创建axios实例
 const service = axios.create({
-  // axios中请求配置有baseURL选项，表示请求URL公共部分
-  baseURL: Cross.getUrl(JAVA_SERVER_NAME),
   // 超时
   timeout: 10000
 })
@@ -44,6 +42,7 @@ const service = axios.create({
 
 // request拦截器
 service.interceptors.request.use(config => {
+  config.baseURL = Cross.getUrl(JAVA_SERVER_NAME)
   if(!config.headers['Content-Type']){
     config.headers['Content-Type'] = 'application/json;charset=utf-8'
   }
@@ -71,7 +70,7 @@ service.interceptors.request.use(config => {
 
 // 响应拦截器
 service.interceptors.response.use(res => {
-    if(res.data && res.data.result){
+    if(res.data && res.data.code === 200){
       return Promise.resolve(res.data)
     }else{
       return Promise.reject(res.data)
@@ -87,13 +86,13 @@ const request =  (options)=>{
     service(options).then(res=>{
       const response = {
         code:200,
-        data:res.object||res.message
+        data:res.data||res.msg
       }
       resolve(response)
     }).catch(error=>{
       const response = {
         code:500,
-        message:error.message||'系统错误'
+        message:error.msg||'系统错误'
       }
       reject(response)
     })

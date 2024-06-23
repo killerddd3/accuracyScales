@@ -373,6 +373,7 @@ onMounted(() => {
 
 const getDeviceList = ()=>{
   ipc.request(ipcApiRoute.getDevice, {}).then(data => {
+    console.log(data)
     deviceList.value = data
   })
 }

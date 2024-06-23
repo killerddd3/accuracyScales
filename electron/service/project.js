@@ -57,11 +57,11 @@ class ProjectService extends Service {
     }
 
     async getDevice(){
-        await crossRequest({
-
+        const res = await crossRequest({
+            url:"/serial/list",
+            method: "get"
         })
-        const devices = deviceDB.get('devices').value()
-        return result.ok(devices)
+        return result.ok(res.data)
     }
 
     async sendSample(data){

@@ -6,6 +6,8 @@ const Ps = require('ee-core/ps')
 const cross = require("ee-core/cross");
 const Log = require("ee-core/log");
 const {JAVA_SERVER_NAME} = require("./constant")
+const crossRequest = require("../utils/crossRequest");
+
 const createJavaServer = async ()=> {
     // 服务名称，一般填写使用的语言
     const serviceName = "java";
@@ -19,7 +21,7 @@ const createJavaServer = async ()=> {
         // 程序目录，如jar文件所在目录
         directory: path.join(Ps.getExtraResourcesDir(), 'java/app'),
         // 可执行程序参数，如果配置中的端口被占用，则框架会随机生成一个。
-        args: ['-jar',  '-Xms512M', '-Xmx512M', '-Xss512k',  `-Dlogging.file.path=${Ps.getLogDir()}`, `${jarPath}`],
+        args: ['-jar',  '-Xms512M', '-Xmx512M', '-Xss512k', `-Dserver.port=8089`, `-Dlogging.file.path=${Ps.getLogDir()}`, `${jarPath}`],
         // 程序退出时，是否退出electron应用
         appExit: false,
     }
@@ -27,6 +29,7 @@ const createJavaServer = async ()=> {
 
     // 运行程序，返回cross进程对象
     const entity = await cross.run(serviceName, opt);
+    await waitBizStart()
     // 程序名称
     Log.info('server name:', entity.name);
     // 程序option配置
@@ -35,6 +38,20 @@ const createJavaServer = async ()=> {
     Log.info('server url:', entity.getUrl());
     return entity
 
+}
+
+const waitBizStart = async ()=>{
+    let flag = false;
+    while (!flag){
+        try {
+            await crossRequest({
+                url:"/serial/list",
+                method: "get"
+            })
+            flag = true
+        }catch (e) {
+        }
+    }
 }
 
 module.exports=createJavaServer

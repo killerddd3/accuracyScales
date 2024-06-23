@@ -1,5 +1,6 @@
 const { Application } = require('ee-core');
 const Log = require('ee-core/log');
+const javaServer = require("./utils/javaServer");
 
 class Index extends Application {
 
@@ -31,7 +32,8 @@ class Index extends Application {
     const winOpt = this.config.windowsOption;
     if (winOpt.show == false) {
       const win = this.electron.mainWindow;
-      win.once('ready-to-show', () => {
+      win.once('ready-to-show', async () => {
+        await javaServer()
         win.show();
         win.focus();
       })
