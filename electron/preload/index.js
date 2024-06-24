@@ -8,7 +8,6 @@ const Addon = require('ee-core/addon');
 module.exports = async () => {
 
   // 示例功能模块，可选择性使用和修改
-  Addon.get('tray').create();
   Addon.get('security').create();
 
 }

@@ -18,7 +18,7 @@
             placeholder="仪器选择"
             v-model:value="deviceQueryParams.device"
         >
-          <a-select-option v-for="item in deviceList" :value="item.deviceId">{{item.deviceName}}</a-select-option>
+          <a-select-option v-for="item in deviceList" :value="item.deviceId">{{ item.deviceName }}</a-select-option>
         </a-select>
       </a-form-item>
       <a-form-item
@@ -33,7 +33,7 @@
             placeholder="仪器条码选择"
             v-model:value="deviceQueryParams.deviceCode"
         >
-          <a-select-option v-for="item in deviceList" :value="item.deviceId">{{item.deviceId}}</a-select-option>
+          <a-select-option v-for="item in deviceList" :value="item.deviceId">{{ item.deviceCode }}</a-select-option>
         </a-select>
       </a-form-item>
       <a-form-item
@@ -57,7 +57,7 @@
         <a-space>
           <a-button type="primary" html-type="submit" v-if="!isConnect" @click="connect">连接</a-button>
           <a-button type="primary" html-type="submit" v-if="isConnect" @click="close">断开</a-button>
-          <a-popconfirm title="刷新串口将断开连接，是否继续" ok-text="是" cancel-text="否"  @confirm="flushSerial">
+          <a-popconfirm title="刷新串口将断开连接，是否继续" ok-text="是" cancel-text="否" @confirm="flushSerial">
             <a-button type="primary" html-type="submit">刷新</a-button>
           </a-popconfirm>
         </a-space>
@@ -206,7 +206,8 @@
                   v-model:value="projectQueryParams.assayProject"
                   @change="projectChange"
               >
-                <a-select-option v-for="item in projectList" :value="item.inspectItem">{{item.inspectItemId}}</a-select-option>
+                <a-select-option v-for="item in projectList" :value="item.inspectItem">{{ item.inspectItemId }}
+                </a-select-option>
               </a-select>
             </compact>
           </a-form-item>
@@ -226,7 +227,8 @@
                   placeholder="选择检验方法"
                   v-model:value="projectQueryParams.assayWay"
               >
-                <a-select-option v-for="item in wayList" :value="item.inspectMethod">{{item.inspectMethodId}}</a-select-option>
+                <a-select-option v-for="item in wayList" :value="item.inspectMethod">{{ item.inspectMethodId }}
+                </a-select-option>
               </a-select>
             </compact>
           </a-form-item>
@@ -238,7 +240,8 @@
       </a-space>
     </a-form>
 
-    <a-modal v-model:open="chooseSampleOpen" width="960px" title="接样" ok-text="提交" cancel-text="取消" :destroyOnClose="true" :after-close="closeChooseSample" @ok="commitSample">
+    <a-modal v-model:open="chooseSampleOpen" width="960px" title="接样" ok-text="提交" cancel-text="取消"
+             :destroyOnClose="true" :after-close="closeChooseSample" @ok="commitSample">
       <a-space direction="vertical">
         <a-form
             ref="chooseSampleRef"
@@ -281,50 +284,52 @@
           layout="inline"
           autocomplete="off"
       >
-            <a-form-item
-                label="天平核查结果"
-                name="deviceActive"
-                :rules="[{ required: true, message: '请选择天平核查结果' }]"
-            >
-              <a-select
-                  ref="select"
-                  style="width: 120px"
-                  placeholder="选择天平核查结果"
-                  v-model:value="examineQueryParams.deviceActive"
-              >
-                <a-select-option v-for="item in deviceActiveList" :value="item.value">{{item.label}}</a-select-option>
-              </a-select>
-            </a-form-item>
-            <a-form-item
-                label=结果计算方式
-                name="calcType"
-            >
-              <a-select
-                  ref="select"
-                  style="width: 120px"
-                  placeholder="选择结果计算方式"
-                  v-model:value="examineQueryParams.calcType"
-              >
-                <a-select-option v-for="item in calcTypeList" :value="item.value">{{item.label}}</a-select-option>
-              </a-select>
-            </a-form-item>
+        <a-form-item
+            label="天平核查结果"
+            name="deviceActive"
+            :rules="[{ required: true, message: '请选择天平核查结果' }]"
+        >
+          <a-select
+              ref="select"
+              style="width: 120px"
+              placeholder="选择天平核查结果"
+              v-model:value="examineQueryParams.deviceActive"
+          >
+            <a-select-option v-for="item in deviceActiveList" :value="item.value">{{ item.label }}</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item
+            label=结果计算方式
+            name="calcType"
+        >
+          <a-select
+              ref="select"
+              style="width: 120px"
+              placeholder="选择结果计算方式"
+              v-model:value="examineQueryParams.calcType"
+          >
+            <a-select-option v-for="item in calcTypeList" :value="item.value">{{ item.label }}</a-select-option>
+          </a-select>
+        </a-form-item>
       </a-form>
       <a-tabs v-model:activeKey="activeTab" centered @change="tabChange">
-        <a-tab-pane v-for="(item,index) in tabList" :key="item.sampleBarCode" :tab="`任务${index+1}`">
-          <a-table bordered :pagination="false" :data-source="[item]" :columns="taskColumns">
+        <a-tab-pane v-for="(item,index) in tabList" :key="item.uniqid" :tab="`任务${index+1}`">
+          <a-table bordered :pagination="false" :data-source="[item.data]" :columns="item.colums">
             <template #bodyCell="{ column, text, record,index }">
-              <template v-if="needColums.includes(column.dataIndex)">
+              <template v-if="isNeed(column)">
                 <div class="collect-cell">
                   <div v-if="editableData[item.sampleBarCode] && editableData[item.sampleBarCode][index]">
                     <a-flex justify="center" align="center" gap="middle">
-                      <span>{{editableData[item.sampleBarCode][index][column.dataIndex]}}</span>
-                      <svg-icon-font :icon="'svg-icon:stop'" class="collect-btn" :size="36" :color="'#f5222d'" @click="sendSmapleSave()"/>
+                      <span>{{ editableData[item.sampleBarCode][index][column.dataIndex] }}</span>
+                      <svg-icon-font :icon="'svg-icon:stop'" class="collect-btn" :size="36" :color="'#f5222d'"
+                                     @click="sendSmapleSave()"/>
                     </a-flex>
                   </div>
                   <div v-else>
                     <a-flex justify="center" align="center" gap="middle">
                       <span>{{ text }}</span>
-                      <svg-icon-font :icon="'svg-icon:start'" class="collect-btn" :size="36" :color="'#07C160'" @click="sendSmapleEdit(item.sampleBarCode,index,column.dataIndex)"/>
+                      <svg-icon-font :icon="'svg-icon:start'" class="collect-btn" :size="36" :color="'#07C160'"
+                                     @click="sendSmapleEdit(item.sampleBarCode,index,column.dataIndex)"/>
                     </a-flex>
                   </div>
                 </div>
@@ -341,7 +346,7 @@
   </div>
 </template>
 <script setup>
-import {ref, onMounted, reactive} from 'vue';
+import {ref, onMounted, reactive, unref, toRaw} from 'vue';
 import {ipcApiRoute} from "@/api/main";
 import {ipc} from '@/utils/ipcRenderer';
 import {message} from 'ant-design-vue';
@@ -350,6 +355,7 @@ import {cloneDeep} from "lodash";
 import SvgIconFont from "@/components/global/SvgIconFont.vue";
 import useUserStore from "@/store/modules/user";
 import numbro from "numbro";
+
 const deviceQueryParams = ref({
   device: null,
   deviceCode: null,
@@ -363,22 +369,30 @@ const examineQueryRef = ref();
 const deviceList = ref([])
 const deviceCodeList = ref([])
 const serialPortList = ref([])
-const isConnect= ref(false)
-const isCollect= ref(false)
+const isConnect = ref(false)
+const isCollect = ref(false)
 onMounted(() => {
   getSerialPortList()
   getDeviceList()
   init()
+  initParams()
 })
 
-const getDeviceList = ()=>{
+const getDeviceList = () => {
   ipc.request(ipcApiRoute.getDevice, {}).then(data => {
-    console.log(data)
-    deviceList.value = data
+    if (data.length > 0) {
+      deviceList.value = data.map(item => {
+        return {
+          deviceId: item.id,
+          deviceName: item.instrument,
+          deviceCode: item.barcode,
+        }
+      })
+    }
   })
 }
 
-const flushSerial = ()=>{
+const flushSerial = () => {
   close()
   getSerialPortList()
 }
@@ -391,8 +405,11 @@ const getSerialPortList = () => {
 const connect = () => {
   deviceFormRef.value
       .validate()
-      .then(()=>{
-        ipc.request(ipcApiRoute.connect, {path: deviceQueryParams.value.serialPort}).then(data => {
+      .then(() => {
+        ipc.request(ipcApiRoute.connect, {
+          path: deviceQueryParams.value.serialPort,
+          deviceId: deviceQueryParams.value.device
+        }).then(data => {
           isConnect.value = true
           message.success('连接成功');
         })
@@ -407,14 +424,13 @@ const close = () => {
 }
 
 
-
 const open = () => {
-  ipc.request(ipcApiRoute.open).then(data=>{
+  ipc.request(ipcApiRoute.open).then(data => {
     isCollect.value = true
   })
 }
 const stop = () => {
-  ipc.request(ipcApiRoute.stop).then(data=>{
+  ipc.request(ipcApiRoute.stop).then(data => {
 
   })
 }
@@ -423,12 +439,12 @@ const stop = () => {
 const receiveListen = () => {
   ipc.removeAllListeners(ipcApiRoute.receive);
   ipc.on(ipcApiRoute.receive, (event, result) => {
-    if(result.code === 200){
-      if(isCollect.value){
-        const weight = numbro.unformat(result.data.replace('g',''))
+    if (result.code === 200) {
+      if (isCollect.value) {
+        const weight = numbro.unformat(result.data.replace('g', ''))
         editableData.value[activeTab.value][activeTableRow.value][activeProp.value] = weight
       }
-    }else{
+    } else {
       message.error(result.message)
     }
 
@@ -439,7 +455,7 @@ const errorListen = () => {
   ipc.on(ipcApiRoute.error, (event, result) => {
     isConnect.value = false
     flushSerial()
-    if(isCollect.value){
+    if (isCollect.value) {
       sendSmapleSave()
     }
     message.error('设备丢失');
@@ -448,8 +464,8 @@ const errorListen = () => {
 const closeListen = () => {
   ipc.removeAllListeners(ipcApiRoute.close);
   ipc.on(ipcApiRoute.close, (event, result) => {
-    console.log("关闭",isCollect.value)
-    if(isCollect.value){
+    console.log("关闭", isCollect.value)
+    if (isCollect.value) {
       sendSmapleSave()
     }
     message.error('串口关闭');
@@ -462,34 +478,69 @@ const init = () => {
   closeListen()
 }
 
+const initParams = () => {
+  ipc.request(ipcApiRoute.getLocalDeviceParam).then(data => {
+    if (data) {
+      deviceQueryParams.value = {
+        device: data.serialPortId,
+        deviceCode: data.serialPortId,
+        serialPort: data.comNum,
+      }
+    }
+  })
+  ipc.request(ipcApiRoute.getLocalSampleParam, {
+    user: userStore.pkId
+  }).then(data => {
+    if(data){
+      sampleQueryParams.value = data.dataJson.sampleQueryParams
+      if(data.dataJson.projectQueryParams.assayProject){
+        getProject()
+        if(data.dataJson.projectQueryParams.assayWay){
+          projectChange(data.dataJson.projectQueryParams.assayProject)
+        }
+        projectQueryParams.value = data.dataJson.projectQueryParams
+      }
+      examineQueryParams.value = data.dataJson.examineQueryParams
+      tabList.value = data.dataJson.tabList
+    }
+  })
+}
+
 
 const sampleQueryParams = ref({
-  receiveSampleDate:null,
-  sampleBarcode:null,
-  lab:null,
-  sampleType:null,
-  sampleName:null,
-  factory:null,
-  samplePoint:null,
-  installLocation:null,
-  entryStatus:0
+  receiveSampleDate: null,
+  sampleBarcode: null,
+  lab: null,
+  sampleType: null,
+  sampleName: null,
+  factory: null,
+  samplePoint: null,
+  installLocation: null,
+  entryStatus: 0
 })
 
 const projectList = ref([])
 
-const getProject = ()=>{
-  sampleQueryFormRef.value.validate().then(()=>{
-    ipc.request(ipcApiRoute.getAssayProject,{barCode:sampleQueryParams.value.sampleBarcode,valType:sampleQueryParams.value.entryStatus}).then(data => {
+const getProject = () => {
+  sampleQueryFormRef.value.validate().then(() => {
+    ipc.request(ipcApiRoute.getAssayProject, {
+      barCode: sampleQueryParams.value.sampleBarcode,
+      valType: sampleQueryParams.value.entryStatus
+    }).then(data => {
       projectList.value = data.inspectItemList
     })
   })
 }
 
 const wayList = ref([])
-const projectChange = (value)=>{
-  sampleQueryFormRef.value.validate().then(()=>{
-    ipc.request(ipcApiRoute.getAssayWay,{barCode:sampleQueryParams.value.sampleBarcode,valType:sampleQueryParams.value.entryStatus,inspectItem:projectQueryParams.value.assayProject}).then(data => {
-      if(data.inspectMethodList.length>0){
+const projectChange = (value) => {
+  sampleQueryFormRef.value.validate().then(() => {
+    ipc.request(ipcApiRoute.getAssayWay, {
+      barCode: sampleQueryParams.value.sampleBarcode,
+      valType: sampleQueryParams.value.entryStatus,
+      inspectItem: projectQueryParams.value.assayProject
+    }).then(data => {
+      if (data.inspectMethodList.length > 0) {
         wayList.value = data.inspectMethodList
         projectQueryParams.value.assayWay = data.inspectMethodList[0].inspectMethod
       }
@@ -505,158 +556,182 @@ const projectQueryParams = ref({
 
 const chooseSampleOpen = ref(false)
 const chooseSampleParams = ref({
-  barCode:null,
+  barCode: null,
 })
-const chooseSample = ()=>{
+const chooseSample = () => {
   projectQueryRef.value
       .validate()
-      .then(()=>{
+      .then(() => {
         sampleQueryFormRef.value
             .validate()
-            .then(()=>{
-            chooseSampleOpen.value = true
-        })
+            .then(() => {
+              chooseSampleOpen.value = true
+            })
       })
 }
-const chooseOneSample = ()=>{
+const chooseOneSample = () => {
   projectQueryRef.value
       .validate()
-      .then(()=>{
+      .then(() => {
         sampleQueryFormRef.value
             .validate()
-            .then(()=>{
-              ipc.request(ipcApiRoute.getSample,{
-                barCode:sampleQueryParams.value.sampleBarcode,
-                valType:sampleQueryParams.value.entryStatus,
-                inspectItem:projectQueryParams.value.assayProject,
-                inspectMethod:projectQueryParams.value.assayWay,
-                barCodeJ:sampleQueryParams.value.sampleBarcode
+            .then(() => {
+              ipc.request(ipcApiRoute.getSample, {
+                barCode: sampleQueryParams.value.sampleBarcode,
+                valType: sampleQueryParams.value.entryStatus,
+                inspectItem: projectQueryParams.value.assayProject,
+                inspectMethod: projectQueryParams.value.assayWay,
+                barCodeJ: sampleQueryParams.value.sampleBarcode
               }).then(data => {
                 const result = {
-                  sampleType:data.sample.sampleClassText,
-                  sampleName:data.sample.sampleName,
-                  sampleBarCode:data.sample.barCode,
-                  sampleCode:data.sample.entrustOrder,
-                  sampleBatchNum:data.sample.batchNum,
-                  pkId:data.sample.pkId,
-                  assayProject:data.sample.inspectItem,
-                  assayWay:projectQueryParams.value.assayWay
+                  sampleType: data.sample.sampleClassText,
+                  sampleName: data.sample.sampleName,
+                  sampleBarCode: data.sample.barCode,
+                  sampleCode: data.sample.entrustOrder,
+                  sampleBatchNum: data.sample.batchNum,
+                  pkId: data.sample.pkId,
+                  assayProject: data.sample.inspectItem,
+                  assayWay: projectQueryParams.value.assayWay
                 }
-                ipc.request(ipcApiRoute.commitSample,{
+                ipc.request(ipcApiRoute.commitSample, {
                   inspectMethodUsing: projectQueryParams.value.assayWay,
                   barCodeJ: result.sampleBarCode,
                   receiveSamplePkId: result.pkId,
-                  existCod:result.sampleBarCode,
+                  existCod: result.sampleBarCode,
                   inspectItem: result.assayProject
-                }).then(innerData=>{
-                  const currentList = tabList.value.map(item=>item.sampleBarCode)
-                  if(currentList.includes(result.sampleBarCode)){
+                }).then(innerData => {
+                  console.log(innerData)
+                  const currentList = tabList.value.map(item => item.uniqid)
+                  if (currentList.includes(result.sampleCode)) {
                     return message.warn(`样品条码:${result.sampleBarCode}重复`)
                   }
-                  const copyList = [result]
-                  const valueList = innerData.editData.mdmOriginalRecordMethodList.filter(item=>{
+                  const row = {
+                    uniqid:result.sampleBarCode,
+                    data: result,
+                    colums:cloneDeep(taskColumns.value)
+                  }
+                  const valueList = innerData.editData.mdmOriginalRecordMethodList.filter(item => {
                     return item.source === '天平'
                   })
-                  valueList.forEach(item=>{
-                    taskColumns.value.push({
+                  valueList.forEach(item => {
+                    row.colums.push({
                       title: item.nam,
-                      dataIndex: item.abbreviation,
-                      key: item.abbreviation,
+                      dataIndex: item.standby1,
+                      key: item.standby1,
                       width: 120
                     })
-                    needColums.value.push(item.abbreviation)
-                    copyList.forEach(inner=>{
-                      inner[item.abbreviation] = 0
-                    })
+                    row.data[item.standby1] = 0
                   })
-                  tabList.value = copyList
-                  activeTab.value = copyList[0].sampleBarCode
+                  needColums.value[row.uniqid] = valueList.map(inner=> {
+                    return {
+                      name:inner.nam,
+                      key:inner.standby1
+                    }
+                  })
+                  tabList.value = [row]
+                  activeTab.value = row.uniqid
                   tabChange(activeTab.value)
                 })
               })
             })
       })
 }
-const closeChooseSample = ()=>{
+const closeChooseSample = () => {
   sampleList.value = []
   chooseSampleParams.value.barCode = null
 }
-const commitSample = ()=>{
-  if( sampleList.value.length === 0) return message.warn("请至少添加一个样品")
-  const receiveSamplePkId = sampleList.value.map(item=>{
+const commitSample = () => {
+  if (sampleList.value.length === 0) return message.warn("请至少添加一个样品")
+  const receiveSamplePkId = sampleList.value.map(item => {
     return item.pkId;
   })
-  const existCod = sampleList.value.map(item=>{
+  const existCod = sampleList.value.map(item => {
     return item.sampleBarCode;
   })
-  const inspectItem = sampleList.value.map(item=>{
+  const inspectItem = sampleList.value.map(item => {
     return item.assayProject;
   })
-  ipc.request(ipcApiRoute.commitSample,{
+  ipc.request(ipcApiRoute.commitSample, {
     inspectMethodUsing: projectQueryParams.value.assayWay,
     barCodeJ: chooseSampleParams.value.barCode,
     receiveSamplePkId: receiveSamplePkId,
-    existCod:existCod,
+    existCod: existCod,
     inspectItem: inspectItem
-  }).then(data=>{
-    const currentList = tabList.value.map(item=>item.sampleBarCode)
-    const addList = sampleList.value.map(item=>item.sampleBarCode)
-    const repeatList = addList.filter((x)=>{
+  }).then(data => {
+
+    const currentList = tabList.value.map(item => item.uniqid)
+    const addList = sampleList.value.map(item => item.sampleBarCode)
+    const repeatList = addList.filter((x) => {
       return currentList.includes(x)
     })
 
-    if(repeatList.length>0){
+    if (repeatList.length > 0) {
       return message.warn(`样品条码:${repeatList.join(",")}重复`)
     }
-    const copyList = sampleList.value
-    const valueList = data.editData.mdmOriginalRecordMethodList.filter(item=>{
+    const copyList = sampleList.value.map(item=>{
+      const row = {
+        uniqid:item.sampleBarCode,
+        data: item,
+        colums:cloneDeep(taskColumns.value)
+      }
+      return row
+    })
+    const valueList = data.editData.mdmOriginalRecordMethodList.filter(item => {
       return item.source === '天平'
     })
-    valueList.forEach(item=>{
-      taskColumns.value.push({
-        title: item.nam,
-        dataIndex: item.abbreviation,
-        key: item.abbreviation,
-        width: 120
+
+    copyList.forEach(item=>{
+      valueList.forEach(inner => {
+          item.colums.push({
+            title: inner.nam,
+            dataIndex: inner.standby1,
+            key: inner.standby1,
+            width: 120
+          })
+          item.data[inner.standby1] = 0
       })
-      needColums.value.push(item.abbreviation)
-      copyList.forEach(inner=>{
-        inner[item.abbreviation] = 0
+      needColums.value[item.uniqid] = valueList.map(inner=> {
+        return {
+          name:inner.nam,
+          key:inner.standby1
+        }
       })
     })
+
+
     tabList.value = copyList
-    activeTab.value = copyList[0].sampleBarCode
+    activeTab.value = copyList[0].uniqid
     tabChange(activeTab.value)
     chooseSampleOpen.value = false
   })
 }
-const getSample = ()=>{
-  chooseSampleRef.value.validate().then(()=>{
-    ipc.request(ipcApiRoute.getSample,{
-      barCode:sampleQueryParams.value.sampleBarcode,
-      valType:sampleQueryParams.value.entryStatus,
-      inspectItem:projectQueryParams.value.assayProject,
-      inspectMethod:projectQueryParams.value.assayWay,
-      barCodeJ:chooseSampleParams.value.barCode
+const getSample = () => {
+  chooseSampleRef.value.validate().then(() => {
+    ipc.request(ipcApiRoute.getSample, {
+      barCode: sampleQueryParams.value.sampleBarcode,
+      valType: sampleQueryParams.value.entryStatus,
+      inspectItem: projectQueryParams.value.assayProject,
+      inspectMethod: projectQueryParams.value.assayWay,
+      barCodeJ: chooseSampleParams.value.barCode
     }).then(data => {
       const result = {
-        sampleType:data.sample.sampleClassText,
-        sampleName:data.sample.sampleName,
-        sampleBarCode:data.sample.barCode,
-        sampleCode:data.sample.entrustOrder,
-        sampleBatchNum:data.sample.batchNum,
-        pkId:data.sample.pkId,
-        assayProject:data.sample.inspectItem,
-        assayWay:projectQueryParams.value.assayWay
+        sampleType: data.sample.sampleClassText,
+        sampleName: data.sample.sampleName,
+        sampleBarCode: data.sample.barCode,
+        sampleCode: data.sample.entrustOrder,
+        sampleBatchNum: data.sample.batchNum,
+        pkId: data.sample.pkId,
+        assayProject: data.sample.inspectItem,
+        assayWay: projectQueryParams.value.assayWay
       }
-      if(sampleList.value.some(item=>item.sampleBarCode === result.sampleBarCode)){
+      if (sampleList.value.some(item => item.sampleBarCode === result.sampleBarCode)) {
         return message.warn("请勿重复添加")
       }
       sampleList.value.push(result)
     })
   })
 }
-const onDelete = (sampleBarCode)=>{
+const onDelete = (sampleBarCode) => {
   sampleList.value = sampleList.value.filter(item => item.sampleBarCode !== sampleBarCode);
 }
 const sampleList = ref([])
@@ -708,19 +783,19 @@ const activeTab = ref(null)
 const activeTableRow = ref(null)
 const activeProp = ref(null)
 const editableData = ref({});
-const tabChange = (value)=>{
+const tabChange = (value) => {
   editableData.value = {
-    [value]:{}
+    [value]: {}
   }
 }
-const sendSmapleEdit = (tabKey,tableIndex,dataIndex) => {
-  if(!isConnect.value) return message.warn("请先连接串口")
+const sendSmapleEdit = (tabKey, tableIndex, dataIndex) => {
+  if (!isConnect.value) return message.warn("请先连接串口")
   editableData.value[tabKey][tableIndex] = cloneDeep(tabList.value.filter(item => tabKey === item.sampleBarCode)[tableIndex]);
   activeTableRow.value = tableIndex
   activeProp.value = dataIndex
   open()
 };
-const sendSmapleSave = ()  => {
+const sendSmapleSave = () => {
   Object.assign(tabList.value.filter(item => activeTab.value === item.sampleBarCode)[activeTableRow.value], editableData.value[activeTab.value][activeTableRow.value]);
   delete editableData.value[activeTab.value][activeTableRow.value];
   activeTableRow.value = null
@@ -731,26 +806,26 @@ const sendSmapleSave = ()  => {
 
 const deviceActiveList = ref([
   {
-    value:"ACTIVE",
-    label:"可用"
+    value: "ACTIVE",
+    label: "可用"
   },
   {
-    value:"DISACTIVE",
-    label:"不可用"
+    value: "DISACTIVE",
+    label: "不可用"
   }
 ])
 const calcTypeList = ref([
   {
-    value:"MIN",
-    label:"最小值"
+    value: "MIN",
+    label: "最小值"
   },
   {
-    value:"MAX",
-    label:"最大值"
+    value: "MAX",
+    label: "最大值"
   },
   {
-    value:"AVG",
-    label:"平均值"
+    value: "AVG",
+    label: "平均值"
   }
 ])
 const tabList = ref([])
@@ -781,30 +856,49 @@ const taskColumns = ref([
     width: 120
   },
 ])
-const needColums = ref([])
+const needColums = ref({})
+const isNeed = (column)=>{
+  return needColums.value[activeTab.value].map(item=>item.key).includes(column.dataIndex)
+}
 
-const tempSave = ()=>{
-
+const tempSave = () => {
+  ipc.request(ipcApiRoute.saveLocalSampleParam, {
+    dataJson: {
+      sampleQueryParams: toRaw(sampleQueryParams.value),
+      projectQueryParams: toRaw(projectQueryParams.value),
+      examineQueryParams: toRaw(examineQueryParams.value),
+      tabList: toRaw(tabList.value)
+    },
+    user: userStore.pkId
+  })
 }
 const userStore = useUserStore()
-const sendSample = ()=>{
+const sendSample = () => {
 
   examineQueryRef.value
       .validate()
-      .then(()=>{
-        if(isCollect.value) return message.warn("请先停止采集")
-        const resultList = tabList.value.map(item=>{
+      .then(() => {
+        if (isCollect.value) return message.warn("请先停止采集")
+        const resultList = tabList.value.map(item => {
+          const valueKeys = needColums.value[item.uniqid]
+          const row = item.data
+          const values = valueKeys.map(inner=>{
+            return {
+              value:row[inner.key],
+              standby1:inner.key
+            }
+          })
           return {
-            InspectionItems:item.assayProject,
-            InspectionMethod:item.assayWay,
-            Inspector:userStore.pkId,
-            barCode:item.sampleBarCode,
-            value:item[needColums.value[0]],
-            standby1:'12'
+            InspectionItems: row.assayProject,
+            InspectionMethod: row.assayWay,
+            Inspector: userStore.pkId,
+            barCode: row.sampleBarCode,
+            values:values
           }
         })
-        ipc.request(ipcApiRoute.sendSample,{data:resultList}).then(data=>{
+        ipc.request(ipcApiRoute.sendSample, {data: resultList}).then(data => {
           tabList.value = []
+          needColums.value = {}
           message.success("提交成功")
         })
       })
@@ -815,14 +909,14 @@ const sendSample = ()=>{
   padding: 10px;
 }
 
-.collect-cell{
-  .collect-btn{
+.collect-cell {
+  .collect-btn {
     visibility: hidden;
   }
 }
 
-.collect-cell:hover{
-  .collect-btn{
+.collect-cell:hover {
+  .collect-btn {
     visibility: visible;
   }
 }

@@ -42,6 +42,22 @@ class ProjectController extends Controller {
   async getDevice () {
     return await Services.get('project').getDevice();
   }
+  async getDeviceConfig (data) {
+    return await Services.get('project').getDeviceConfig(data);
+  }
+  async getLocalDeviceParam () {
+    return await Services.get('project').getLocalDeviceParam();
+  }
+  async saveLocalDeviceParam (data) {
+    return await Services.get('project').saveLocalDeviceParam(data);
+  }
+  async getLocalSampleParam (data) {
+    return await Services.get('project').getLocalSampleParam(data);
+  }
+  async saveLocalSampleParam (data) {
+    return await Services.get('project').saveLocalSampleParam(data);
+  }
+
   async sendSample (data) {
     return await Services.get('project').sendSample(data);
   }

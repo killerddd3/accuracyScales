@@ -1,6 +1,7 @@
 const { Application } = require('ee-core');
 const Log = require('ee-core/log');
 const javaServer = require("./utils/javaServer");
+const store = require('./utils/storage')
 
 class Index extends Application {
 
@@ -13,6 +14,7 @@ class Index extends Application {
    * core app have been loaded
    */
   async ready () {
+    await javaServer()
     // do some things
   }
 
@@ -32,8 +34,7 @@ class Index extends Application {
     const winOpt = this.config.windowsOption;
     if (winOpt.show == false) {
       const win = this.electron.mainWindow;
-      win.once('ready-to-show', async () => {
-        await javaServer()
+      win.once('ready-to-show', () => {
         win.show();
         win.focus();
       })
@@ -45,7 +46,7 @@ class Index extends Application {
    */
   async beforeClose () {
     // do some things
-
+    store.clear()
   }
 }
 

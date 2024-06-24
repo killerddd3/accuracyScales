@@ -17,6 +17,11 @@ const ipcApiRoute = {
   getAssayWay: 'controller.project.getAssayWay',
   getSample: 'controller.project.getSample',
   getDevice: 'controller.project.getDevice',
+  getDeviceConfig: 'controller.project.getDeviceConfig',
+  getLocalDeviceParam: 'controller.project.getLocalDeviceParam',
+  saveLocalDeviceParam: 'controller.project.saveLocalDeviceParam',
+  getLocalSampleParam: 'controller.project.getLocalSampleParam',
+  saveLocalSampleParam: 'controller.project.saveLocalSampleParam',
   commitSample: 'controller.project.commitSample',
   sendSample: 'controller.project.sendSample',
 

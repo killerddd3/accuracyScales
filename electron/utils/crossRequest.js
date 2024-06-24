@@ -86,7 +86,7 @@ const request =  (options)=>{
     service(options).then(res=>{
       const response = {
         code:200,
-        data:res.data||res.msg
+        data:res.data
       }
       resolve(response)
     }).catch(error=>{

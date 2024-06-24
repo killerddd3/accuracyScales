@@ -148,7 +148,7 @@ module.exports = (appInfo) => {
       enable: true,
     },
     tray: {
-      enable: true,
+      enable: false,
       title: 'EE程序',
       icon: '/public/images/tray.png'
     },
@@ -156,7 +156,7 @@ module.exports = (appInfo) => {
       enable: true,
     },
     awaken: {
-      enable: true,
+      enable: false,
       protocol: 'ee',
       args: []
     },

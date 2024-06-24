@@ -8,6 +8,7 @@ const {ipcApiRoute} = require('../api/main')
 const {ByteLengthParser} = require('@serialport/parser-byte-length')
 const result = require('../utils/result')
 const {ServiceError} = require("../utils/exception");
+const Services = require("ee-core/services");
 
 /**
  * 示例服务（service层为单例）
@@ -27,18 +28,26 @@ class SerialPortService extends Service {
 
     async connect(args, event) {
         await this.close()
-        const {path} = args
-        //dataBits 数据位 stopBits 停止位
-        this.port = new SerialPort({
-            path,
-            baudRate: 9600,
-            autoOpen: false,
-            endOnClose: true,
-            parity: 'odd',
-            dataBits: 8,
-            stopBits: 1
-        })
-        return result.ok()
+        const {path,deviceId} = args
+
+        const configRes = await Services.get('project').getDeviceConfig({id:deviceId});
+        await Services.get('project').saveLocalDeviceParam({serialPortId:deviceId,comNum:path});
+        if(configRes.code === 200){
+            //dataBits 数据位 stopBits 停止位
+            this.port = new SerialPort({
+                path,
+                baudRate: configRes.data.baudRate,
+                autoOpen: false,
+                endOnClose: true,
+                parity: configRes.data.parity,
+                dataBits: configRes.data.dataBits,
+                stopBits: configRes.data.stopBits
+            })
+            return result.ok()
+        }else{
+            return result.fail()
+        }
+
     }
 
     async close() {
