@@ -311,6 +311,12 @@
             <a-select-option v-for="item in calcTypeList" :value="item.value">{{ item.label }}</a-select-option>
           </a-select>
         </a-form-item>
+        <a-form-item>
+          <a-space align="start">
+            <a-button type="primary" :disabled="isCollect" @click="open">开始采集</a-button>
+            <a-button type="primary" :disabled="!isCollect" @click="stop">结束采集</a-button>
+          </a-space>
+        </a-form-item>
       </a-form>
       <a-tabs v-model:activeKey="activeTab" centered @change="tabChange">
         <a-tab-pane v-for="(item,index) in tabList" :key="item.uniqid" :tab="`任务${index+1}`">
@@ -318,18 +324,14 @@
             <template #bodyCell="{ column, text, record,index }">
               <template v-if="isNeed(column)">
                 <div class="collect-cell">
-                  <div v-if="editableData[item.sampleBarCode] && editableData[item.sampleBarCode][index]">
+                  <div v-if="activeTableRow === index && activeProp === column.dataIndex">
                     <a-flex justify="center" align="center" gap="middle">
-                      <span>{{ editableData[item.sampleBarCode][index][column.dataIndex] }}</span>
-                      <svg-icon-font :icon="'svg-icon:stop'" class="collect-btn" :size="36" :color="'#f5222d'"
-                                     @click="sendSmapleSave()"/>
+                      <span>{{ editableData[activeProp] }}</span>
                     </a-flex>
                   </div>
                   <div v-else>
                     <a-flex justify="center" align="center" gap="middle">
                       <span>{{ text }}</span>
-                      <svg-icon-font :icon="'svg-icon:start'" class="collect-btn" :size="36" :color="'#07C160'"
-                                     @click="sendSmapleEdit(item.sampleBarCode,index,column.dataIndex)"/>
                     </a-flex>
                   </div>
                 </div>
@@ -425,11 +427,18 @@ const close = () => {
 
 
 const open = () => {
+  if (!isConnect.value) return message.warn("请先连接串口")
+  if(tabList.value.length === 0) return message.warn("请先接样")
+  if(!activeTableRow.value && !activeProp.value) return message.warn("请选择称量项")
+  if(isCollect.value) return message.warn("已经开始采集")
   ipc.request(ipcApiRoute.open).then(data => {
     isCollect.value = true
   })
 }
 const stop = () => {
+  if (!isConnect.value) return message.warn("请先连接串口")
+  if (!isCollect.value) return message.warn("还未开始采集")
+  sendSmapleSave()
   ipc.request(ipcApiRoute.stop).then(data => {
 
   })
@@ -442,7 +451,7 @@ const receiveListen = () => {
     if (result.code === 200) {
       if (isCollect.value) {
         const weight = numbro.unformat(result.data.replace('g', ''))
-        editableData.value[activeTab.value][activeTableRow.value][activeProp.value] = weight
+        editableData.value[activeProp.value] = weight
       }
     } else {
       message.error(result.message)
@@ -464,7 +473,6 @@ const errorListen = () => {
 const closeListen = () => {
   ipc.removeAllListeners(ipcApiRoute.close);
   ipc.on(ipcApiRoute.close, (event, result) => {
-    console.log("关闭", isCollect.value)
     if (isCollect.value) {
       sendSmapleSave()
     }
@@ -479,6 +487,10 @@ const init = () => {
 }
 
 const initParams = () => {
+  initDeviceParms()
+  initLocalParams()
+}
+const initDeviceParms = ()=>{
   ipc.request(ipcApiRoute.getLocalDeviceParam).then(data => {
     if (data) {
       deviceQueryParams.value = {
@@ -488,25 +500,107 @@ const initParams = () => {
       }
     }
   })
+}
+const initLocalParams = ()=>{
   ipc.request(ipcApiRoute.getLocalSampleParam, {
     user: userStore.pkId
   }).then(data => {
     if(data){
-      sampleQueryParams.value = data.dataJson.sampleQueryParams
-      if(data.dataJson.projectQueryParams.assayProject){
-        getProject()
-        if(data.dataJson.projectQueryParams.assayWay){
-          projectChange(data.dataJson.projectQueryParams.assayProject)
-        }
-        projectQueryParams.value = data.dataJson.projectQueryParams
-      }
-      examineQueryParams.value = data.dataJson.examineQueryParams
-      tabList.value = data.dataJson.tabList
+      initSampleQueryParams(data)
+      initProjectQueryParams(data)
+      initExamineQueryParams(data)
     }
   })
 }
 
+const initSampleQueryParams = (data)=>{
+  sampleQueryParams.value = Object.assign(sampleQueryParams.value,data.dataJson.sampleQueryParams)
+}
+const initProjectQueryParams = (data)=>{
+  if(data.dataJson.projectQueryParams.assayProject){
+    sampleQueryFormRef.value.validate().then(() => {
+      ipc.request(ipcApiRoute.getAssayProject, {
+        barCode: sampleQueryParams.value.sampleBarcode,
+        valType: sampleQueryParams.value.entryStatus
+      }).then(projectData => {
+        projectList.value = projectData.inspectItemList
+        projectQueryParams.value = Object.assign(projectQueryParams.value,data.dataJson.projectQueryParams)
+        if(data.dataJson.projectQueryParams.assayWay){
+          sampleQueryFormRef.value.validate().then(() => {
+            ipc.request(ipcApiRoute.getAssayWay, {
+              barCode: sampleQueryParams.value.sampleBarcode,
+              valType: sampleQueryParams.value.entryStatus,
+              inspectItem: projectQueryParams.value.assayProject
+            }).then(wayData => {
+              if (wayData.inspectMethodList.length > 0) {
+                wayList.value = wayData.inspectMethodList
+              }
+              projectQueryParams.value = Object.assign(projectQueryParams.value,data.dataJson.projectQueryParams)
+              initTabList(data)
+            })
+          })
+        }
+      })
+    })
+  }
+}
+const initTabList = (data)=>{
+  const sourceList = data.dataJson.tabList.map(item=>item.data)
+  const receiveSamplePkId = sourceList.map(item => {
+    return item.pkId;
+  })
+  const existCod = sourceList.map(item => {
+    return item.sampleBarCode;
+  })
+  const inspectItem = sourceList.map(item => {
+    return item.assayProject;
+  })
+  ipc.request(ipcApiRoute.commitSample, {
+    inspectMethodUsing: projectQueryParams.value.assayWay,
+    barCodeJ: chooseSampleParams.value.barCode,
+    receiveSamplePkId: receiveSamplePkId,
+    existCod: existCod,
+    inspectItem: inspectItem
+  }).then(data => {
+    const copyList = sourceList.map(item=>{
+      const row = {
+        uniqid:item.sampleBarCode,
+        data: item,
+        colums:cloneDeep(taskColumns.value)
+      }
+      return row
+    })
+    const valueList = data.editData.mdmOriginalRecordMethodList.filter(item => {
+      return item.source === '天平'
+    })
 
+    copyList.forEach(item=>{
+      valueList.forEach(inner => {
+        item.colums.push({
+          title: inner.nam,
+          dataIndex: inner.standby1,
+          key: inner.standby1,
+          width: 120,
+          customCell:customCellHandle
+        })
+        item.data[inner.standby1] = 0
+      })
+      needColums.value[item.uniqid] = valueList.map(inner=> {
+        return {
+          name:inner.nam,
+          key:inner.standby1
+        }
+      })
+    })
+    tabList.value = copyList
+    activeTab.value = copyList[0].uniqid
+    tabChange(activeTab.value)
+  })
+}
+
+const initExamineQueryParams = (data)=>{
+  examineQueryParams.value = Object.assign(examineQueryParams.value,data.dataJson.examineQueryParams)
+}
 const sampleQueryParams = ref({
   receiveSampleDate: null,
   sampleBarcode: null,
@@ -600,7 +694,6 @@ const chooseOneSample = () => {
                   existCod: result.sampleBarCode,
                   inspectItem: result.assayProject
                 }).then(innerData => {
-                  console.log(innerData)
                   const currentList = tabList.value.map(item => item.uniqid)
                   if (currentList.includes(result.sampleCode)) {
                     return message.warn(`样品条码:${result.sampleBarCode}重复`)
@@ -618,7 +711,8 @@ const chooseOneSample = () => {
                       title: item.nam,
                       dataIndex: item.standby1,
                       key: item.standby1,
-                      width: 120
+                      width: 120,
+                      customCell:customCellHandle
                     })
                     row.data[item.standby1] = 0
                   })
@@ -650,6 +744,13 @@ const commitSample = () => {
   })
   const inspectItem = sampleList.value.map(item => {
     return item.assayProject;
+  })
+  console.log({
+    inspectMethodUsing: projectQueryParams.value.assayWay,
+    barCodeJ: chooseSampleParams.value.barCode,
+    receiveSamplePkId: receiveSamplePkId,
+    existCod: existCod,
+    inspectItem: inspectItem
   })
   ipc.request(ipcApiRoute.commitSample, {
     inspectMethodUsing: projectQueryParams.value.assayWay,
@@ -686,7 +787,8 @@ const commitSample = () => {
             title: inner.nam,
             dataIndex: inner.standby1,
             key: inner.standby1,
-            width: 120
+            width: 120,
+            customCell:customCellHandle
           })
           item.data[inner.standby1] = 0
       })
@@ -784,24 +886,38 @@ const activeTableRow = ref(null)
 const activeProp = ref(null)
 const editableData = ref({});
 const tabChange = (value) => {
-  editableData.value = {
-    [value]: {}
+  if(isCollect.value) {
+    return message.warn("请结束采集")
+  }
+  editableData.value = {}
+  activeTableRow.value = null
+  activeProp.value = null
+}
+const customCellHandle = (record, rowIndex, column)=>{
+  let style = null
+  if(activeTableRow.value === rowIndex && activeProp.value === column.dataIndex){
+    style = {
+      'border': '2px solid #07C160'
+    }
+  }
+  return {
+    onClick:sendSmapleEdit(record, rowIndex, column),
+    style: style
   }
 }
-const sendSmapleEdit = (tabKey, tableIndex, dataIndex) => {
-  if (!isConnect.value) return message.warn("请先连接串口")
-  editableData.value[tabKey][tableIndex] = cloneDeep(tabList.value.filter(item => tabKey === item.sampleBarCode)[tableIndex]);
-  activeTableRow.value = tableIndex
-  activeProp.value = dataIndex
-  open()
+const sendSmapleEdit = (record, rowIndex, column) => {
+  return ()=>{
+    editableData.value = cloneDeep(record);
+    activeTableRow.value = rowIndex
+    activeProp.value = column.dataIndex
+  }
 };
 const sendSmapleSave = () => {
-  Object.assign(tabList.value.filter(item => activeTab.value === item.sampleBarCode)[activeTableRow.value], editableData.value[activeTab.value][activeTableRow.value]);
-  delete editableData.value[activeTab.value][activeTableRow.value];
+  Object.assign(tabList.value.filter(item => activeTab.value === item.uniqid)[activeTableRow.value].data, editableData.value);
+  editableData.value = {}
   activeTableRow.value = null
   activeProp.value = null
   isCollect.value = false
-  stop()
 };
 
 const deviceActiveList = ref([
@@ -862,13 +978,14 @@ const isNeed = (column)=>{
 }
 
 const tempSave = () => {
+  let params = {
+    sampleQueryParams: toRaw(sampleQueryParams.value),
+    projectQueryParams: toRaw(projectQueryParams.value),
+    examineQueryParams: toRaw(examineQueryParams.value),
+    tabList: toRaw(tabList.value)
+  }
   ipc.request(ipcApiRoute.saveLocalSampleParam, {
-    dataJson: {
-      sampleQueryParams: toRaw(sampleQueryParams.value),
-      projectQueryParams: toRaw(projectQueryParams.value),
-      examineQueryParams: toRaw(examineQueryParams.value),
-      tabList: toRaw(tabList.value)
-    },
+    dataJson:JSON.stringify(params),
     user: userStore.pkId
   })
 }

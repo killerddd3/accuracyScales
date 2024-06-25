@@ -43,6 +43,28 @@ class SerialPortService extends Service {
                 dataBits: configRes.data.dataBits,
                 stopBits: configRes.data.stopBits
             })
+
+            const parser = this.port.pipe(new ByteLengthParser({length: 22}))
+            parser.on('data', (data) => {
+                Log.info(data)
+                const strData = Buffer.from(data).toString('utf-8')
+                let response;
+                try {
+                    const value = this.weightAnalysis(strData)
+                    response = result.ok(value)
+                } catch (e) {
+                    response = result.fail(e.message)
+                }
+                CoreWindow.getMainWindow().webContents.send(ipcApiRoute.receive, response)
+
+            })
+            this.port.on('error', err => {
+                this.close()
+                event.sender.send(ipcApiRoute.error, err)
+            })
+            this.port.on('close', err => {
+                event.sender.send(ipcApiRoute.close, err)
+            })
             return result.ok()
         }else{
             return result.fail()
@@ -93,28 +115,6 @@ class SerialPortService extends Service {
         if (this.port.isOpen) return result.fail("已经开始采集")
         this.port.open()
         this.port.resume()
-
-        const parser = this.port.pipe(new ByteLengthParser({length: 22}))
-        parser.on('data', (data) => {
-            Log.info(data)
-            const strData = Buffer.from(data).toString('utf-8')
-            let response;
-            try {
-                const value = this.weightAnalysis(strData)
-                response = result.ok(value)
-            } catch (e) {
-                response = result.fail(e.message)
-            }
-            CoreWindow.getMainWindow().webContents.send(ipcApiRoute.receive, response)
-
-        })
-        this.port.on('error', err => {
-            this.close()
-            event.sender.send(ipcApiRoute.error, err)
-        })
-        this.port.on('close', err => {
-            event.sender.send(ipcApiRoute.close, err)
-        })
         return result.ok()
     }
 

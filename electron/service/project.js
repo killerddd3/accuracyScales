@@ -107,6 +107,7 @@ class ProjectService extends Service {
 
     async saveLocalSampleParam(data){
         data.mac = getmac()
+        data.dataJson = JSON.parse(data.dataJson)
         const res = await crossRequest({
             url:"/save/setUserSave",
             method: "post",

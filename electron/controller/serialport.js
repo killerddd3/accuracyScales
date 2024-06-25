@@ -27,8 +27,8 @@ class SerialPortController extends Controller {
     return await Services.get('serialport').getSerialPortList();
   }
 
-  async connect (args) {
-    return await Services.get('serialport').connect(args);
+  async connect (args,event) {
+    return await Services.get('serialport').connect(args,event);
   }
 
   async open (args,event) {
